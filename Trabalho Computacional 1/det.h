@@ -1,6 +1,6 @@
 #include <vector>
 
-double calcDeterminant(std::vector<std::vector<double>>& matrix, int order)
+double calcDeterminant(std::vector<std::vector<double>> matrix, int order)
 {
     double multiply;
     double determinant = 1;

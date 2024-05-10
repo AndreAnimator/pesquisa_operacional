@@ -6,10 +6,9 @@
 
 using namespace std;
 
-int getMatrix(vector<vector<double>> matrix)
+int getMatrix(vector<vector<double>>& matrix)
 {
     // Inicilizando duas matrizes vazias
-    vector<vector<double>> NIL(0, vector<double>(0, 0)), matrix;
     string line;
     ifstream file("matriz.txt");
     if (!file.is_open()) {
@@ -30,16 +29,6 @@ int getMatrix(vector<vector<double>> matrix)
         matrix.push_back(matrix_line);
     }
     file.close();
-
-    // Determinando o número de linhas e colunas da matriz
-    int num_lines = matrix.size();
-    int num_coluns = matrix[0].size(); // Assumindo que todas as linhas tenham o mesmo número de colunas
-
-    if (num_lines != num_coluns) {
-        cerr << "A matriz não é quadrada!" << endl;
-        return 1;
-    }
-
     return 0;
 }
 
