@@ -1,8 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <clocale>
-#include "det.h"
 #include "fileOperations.cpp"
+#include "matrixOperations.cpp"
 
 using namespace std;
 
@@ -15,12 +15,10 @@ int main() {
         return 1;
     }
     int determinant = calcDeterminant(matrix, matrix.size());
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            cout << matrix[i][j] << " ";
-        }
-        cout << endl;
-    }
+    printMatrix(matrix);
+    printf("\n");
+    switchLines(matrix, 0, 3);
+    printMatrix(matrix);
     printf("O determinante da matriz é: %d \n", determinant);
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
     // Exemplo: matrix[0][0] retorna o primeiro elemento da matriz
