@@ -14,15 +14,21 @@ void switchLines(vector<vector<double>>& matrix, int x_line, int y_line);
 void switchColumns(vector<vector<double>>& matrix, int x_column, int y_column);
 void printMatrix(vector<vector<double>> matrix);
 int gaussJordanElimination(vector<vector<double>>& matrix, int order);
+vector<vector<double>> sliceMatrix(vector<vector<double>>& matrix, int order);
+vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector<vector<double>>& matrix_2, int line_size, int col_size);
 
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
-    vector<vector<double>> matrix; 
+    vector<vector<double>> original_matrix;
+    vector<vector<double>> matrix;
+    vector<vector<double>> result;
+    vector<vector<double>> matrix_checker;
     if (getMatrix(matrix) == 1) 
     {
         return 1;
     }
+    original_matrix = matrix;
     int determinant = calcDeterminant(matrix, matrix.size());
     printMatrix(matrix);
     printf("\n");
@@ -30,6 +36,11 @@ int main() {
     gaussJordanElimination(matrix, matrix.size());
     printMatrix(matrix);
     printf("O determinante da matriz é: %d \n", determinant);
+    result = sliceMatrix(matrix, matrix.size());
+    printMatrix(result);
+    printf("OIEEEEEEEEEE cade minha matriz\n");
+    matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
+    printMatrix(matrix_checker);
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
     // Exemplo: matrix[0][0] retorna o primeiro elemento da matriz
     return 0;
@@ -214,4 +225,39 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order)
         }
     }
     return 0;
+}
+
+vector<vector<double>> sliceMatrix(vector<vector<double>>& matrix, int order)
+{
+    vector<vector<double>> new_matrix;
+    vector<double> new_line;
+    for (int i = 0; i < order; i++) {
+        for (int j = order; j < order*2; j++) {
+            new_line.push_back(matrix[i][j]);
+        }
+        new_matrix.push_back(new_line);
+        new_line.clear();
+    }
+
+    return new_matrix;
+}
+
+vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector<vector<double>>& matrix_2, int row_size, int col_size)
+{
+    vector<vector<double>> result;
+    double aux;
+    vector<double> new_line;
+    cout << "Quantidade de linhas: " << row_size << "\nQuantidade de colunas" << col_size << endl;
+    for (int i = 0; i < row_size; i++) {
+        for (int j = 0; j < col_size; j++) {
+            aux = 0;
+            for (int k = 0; k < row_size; k++) {
+                aux += matrix_1[i][k] * matrix_2[k][j];
+            }
+            new_line.push_back(aux);
+        }
+        result.push_back(new_line);
+        new_line.clear();
+    }
+    return result;
 }
