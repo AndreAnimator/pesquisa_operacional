@@ -12,6 +12,7 @@ void expandMatrix(vector<vector<double>>& matrix, int order);
 void switchLines(vector<vector<double>>& matrix, int x_line, int y_line);
 void switchColumns(vector<vector<double>>& matrix, int x_column, int y_column);
 void printMatrix(vector<vector<double>> matrix);
+int gaussJordanElimination(vector<vector<double>>& matrix, int order);
 
 int main() {
 
@@ -25,6 +26,7 @@ int main() {
     printMatrix(matrix);
     printf("\n");
     expandMatrix(matrix, matrix.size());
+    gaussJordanElimination(matrix, matrix.size());
     printMatrix(matrix);
     printf("O determinante da matriz é: %d \n", determinant);
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
@@ -156,3 +158,51 @@ void printMatrix(vector<vector<double>> matrix)
     }
 }
 
+int gaussJordanElimination(vector<vector<double>>& matrix, int order)
+{
+    double multiply;
+    /* 
+        No loop das linhas está order-1 porque não queremos mexer na última linha 
+        já que ela é a linha que identifica as colunas
+    */
+    for (int i = 0; i < order-1; i++) {
+        // Troca linhas se pivo é zero
+        if (matrix[i][i] == 0) {
+            for (int j = i+1; j < order; j++) {
+                if (matrix[j][i] != 0) {
+                    switchLines(matrix, i, j);
+                    break;
+                }
+            }
+        }
+        // Troca colunas se pivo continua sendo zero
+        if (matrix[i][i] == 0) {
+            for (int j = 0; j < 2*order; j++) {
+                if (matrix[i][j] != 0) {
+                    switchColumns(matrix, i, j);    
+                    break;
+                }
+            }
+        }
+        if (matrix[i][i] == 0) {
+            cout << "Matriz singular" << endl;
+            return 1;
+        }
+        for (int j = 0; j < order; j++) {
+            if (i != j) {
+                multiply = matrix[j][i] / matrix[i][i];
+                for (int k = 0; k < 2*order; k++) {
+                    matrix[j][k] = matrix[j][k] - matrix[i][k] * multiply;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < order; i++) {
+        multiply = matrix[i][i];
+        for (int j = 0; j < 2*order; j++) {
+            matrix[i][j] = matrix[i][j] / multiply;
+        }
+    }
+    return 0;
+}
