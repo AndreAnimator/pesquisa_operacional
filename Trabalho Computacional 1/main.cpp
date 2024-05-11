@@ -6,8 +6,9 @@
 #include <sstream>
 
 using namespace std;
+
 int getMatrix(vector<vector<double>>& matrix);
-double calcDeterminant(std::vector<std::vector<double>> matrix, int order);
+double calcDeterminant(vector<vector<double>> matrix, int order);
 void expandMatrix(vector<vector<double>>& matrix, int order);
 void switchLines(vector<vector<double>>& matrix, int x_line, int y_line);
 void switchColumns(vector<vector<double>>& matrix, int x_column, int y_column);
@@ -56,6 +57,14 @@ int getMatrix(vector<vector<double>>& matrix)
         }
         matrix.push_back(matrix_line);
     }
+    for (int i = 0; i < matrix.size(); i++)
+    {
+        if (matrix.size() != matrix[i].size())
+        {
+            cerr << "Matriz não é quadrada!" << endl;
+            return 1;
+        }
+    }
     file.close();
     return 0;
 }
@@ -103,11 +112,11 @@ void expandMatrix(vector<vector<double>>& matrix, int order)
     }
 
     //está fazendo com que a última linha identifique as colunas
-    for (int i = 0; i < 2*order; i++)
-    {
-        new_line.push_back(i+1);
-    }
-    new_matrix.push_back(new_line);
+    // for (int i = 0; i < 2*order; i++)
+    // {
+    //     new_line.push_back(i+1);
+    // }
+    //new_matrix.push_back(new_line);
     matrix = new_matrix;
 
 }
@@ -165,7 +174,7 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order)
         No loop das linhas está order-1 porque não queremos mexer na última linha 
         já que ela é a linha que identifica as colunas
     */
-    for (int i = 0; i < order-1; i++) {
+    for (int i = 0; i < order; i++) {
         // Troca linhas se pivo é zero
         if (matrix[i][i] == 0) {
             for (int j = i+1; j < order; j++) {
@@ -176,14 +185,14 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order)
             }
         }
         // Troca colunas se pivo continua sendo zero
-        if (matrix[i][i] == 0) {
-            for (int j = 0; j < 2*order; j++) {
-                if (matrix[i][j] != 0) {
-                    switchColumns(matrix, i, j);    
-                    break;
-                }
-            }
-        }
+        // if (matrix[i][i] == 0) {
+        //     for (int j = 0; j < 2*order; j++) {
+        //         if (matrix[i][j] != 0) {
+        //             switchColumns(matrix, i, j);    
+        //             break;
+        //         }
+        //     }
+        // }
         if (matrix[i][i] == 0) {
             cout << "Matriz singular" << endl;
             return 1;
