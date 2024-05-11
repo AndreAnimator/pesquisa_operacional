@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <clocale>
 #include <fstream>
@@ -7,7 +8,9 @@
 using namespace std;
 int getMatrix(vector<vector<double>>& matrix);
 double calcDeterminant(std::vector<std::vector<double>> matrix, int order);
+void expandMatrix(vector<vector<double>>& matrix, int order);
 void switchLines(vector<vector<double>>& matrix, int x_line, int y_line);
+void switchColumns(vector<vector<double>>& matrix, int x_column, int y_column);
 void printMatrix(vector<vector<double>> matrix);
 
 int main() {
@@ -21,7 +24,7 @@ int main() {
     int determinant = calcDeterminant(matrix, matrix.size());
     printMatrix(matrix);
     printf("\n");
-    switchLines(matrix, 0, 3);
+    expandMatrix(matrix, matrix.size());
     printMatrix(matrix);
     printf("O determinante da matriz é: %d \n", determinant);
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
@@ -77,6 +80,36 @@ double calcDeterminant(std::vector<std::vector<double>> matrix, int order)
     return determinant;
 }
 
+void expandMatrix(vector<vector<double>>& matrix, int order)
+{
+    vector<vector<double>> new_matrix;
+    vector<double> new_line;
+    for (int i = 0; i < order; i++) {
+        for (int j = 0; j < order; j++) {
+            new_line.push_back(matrix[i][j]);
+        }
+        for (int j = order; j < 2*order; j++) {
+            if (j == i + order) {
+                new_line.push_back(1);
+            }
+            else {
+                new_line.push_back(0);
+            }
+        }
+        new_matrix.push_back(new_line);
+        new_line.clear();
+    }
+
+    //está fazendo com que a última linha identifique as colunas
+    for (int i = 0; i < 2*order; i++)
+    {
+        new_line.push_back(i+1);
+    }
+    new_matrix.push_back(new_line);
+    matrix = new_matrix;
+
+}
+
 void switchLines(vector<vector<double>>& matrix, int x_line, int y_line)
 {
     double aux;
@@ -89,11 +122,35 @@ void switchLines(vector<vector<double>>& matrix, int x_line, int y_line)
     }
 }
 
+void switchColumns(vector<vector<double>>& matrix, int x_column, int y_column)
+{
+    double aux;
+
+    for (int i = 0; i < matrix.size(); i++)
+    {
+        aux = matrix[i][x_column];
+        matrix[i][x_column] = matrix[i][y_column];
+        matrix[i][y_column] = aux; 
+    }
+}
+
 void printMatrix(vector<vector<double>> matrix)
 {
+    int maxDigits = 0;
+    // Procurando número máximo de dígitos na matriz
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {
-            cout << matrix[i][j] << " ";
+            int digits = to_string(matrix[i][j]).length();
+            if (digits > maxDigits) {
+                maxDigits = digits;
+            }
+        }
+    }
+
+    // Imprimindo com espaços iguais
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix[i].size(); j++) {
+            cout << setw(maxDigits) << fixed << setprecision(5) << matrix[i][j] << " ";
         }
         cout << endl;
     }
