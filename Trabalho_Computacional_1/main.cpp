@@ -80,24 +80,37 @@ int getMatrix(vector<vector<double>>& matrix)
     return 0;
 }
 
-double calcDeterminant(std::vector<std::vector<double>> matrix, int order)
+double calcDeterminant(vector<vector<double>> matrix, int order)
 {
     double multiply;
     double determinant = 1;
 
+    cout << "Calculando... determinante" << endl;
+
+    printMatrix(matrix);
+
     for (int i = 0; i < order; i++) {
         for (int j = 0; j < order; j++) {
-            multiply = matrix[j][i] / matrix[i][i];
+            if(matrix[i][i] == 0)
+                multiply = 0;
+            else
+                multiply = matrix[j][i] / matrix[i][i];
+            cout << endl << "Multiply " << i << ", " << j << " " << multiply << endl;
             for (int k = 0; k < order; k++) {
                 if (i != j)
                     matrix[j][k] = matrix[j][k] - matrix[i][k] * multiply;
+                    cout << endl << "Matriz " << j << " " << k << " " << matrix[j][k] << endl;
             }
         }
     }
 
     for (int i = 0; i < order; i++) {
+        cout << endl << "DETERMINANTe " << i << " " << determinant << endl;
+        cout << endl << "Matriz " << i << " " << matrix[i][i] << endl;
         determinant *= matrix[i][i];
     }
+
+    cout << endl << "DETERMINANTEEEE " << determinant << endl;
 
     return determinant;
 }
@@ -136,11 +149,13 @@ void switchLines(vector<vector<double>>& matrix, int x_line, int y_line)
 {
     double aux;
 
-    for (int i = 0; i < matrix.size(); i++)
+    cout << endl << "Tamanho da linha a ser trocada: " << matrix[0].size() << endl;
+
+    for (int i = 0; i < matrix[0].size(); i++)
     {
         aux = matrix[x_line][i];
 		matrix[x_line][i] = matrix[y_line][i];
-		matrix[y_line][i] = aux; 
+		matrix[y_line][i] = aux;
     }
 }
 
@@ -216,6 +231,8 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order)
                 }
             }
         }
+        printMatrix(matrix);
+        cout << endl;
     }
 
     for (int i = 0; i < order; i++) {
