@@ -80,38 +80,40 @@ int getMatrix(vector<vector<double>>& matrix)
     return 0;
 }
 
-double calcDeterminant(vector<vector<double>> matrix, int order)
-{
-    double multiply;
+double calcDeterminant(vector<vector<double>> matrix, int order) {
     double determinant = 1;
 
-    cout << "Calculando... determinante" << endl;
-
-    printMatrix(matrix);
-
     for (int i = 0; i < order; i++) {
-        for (int j = 0; j < order; j++) {
-            if(matrix[i][i] == 0)
-                multiply = 0;
-            else
-                multiply = matrix[j][i] / matrix[i][i];
-            cout << endl << "Multiply " << i << ", " << j << " " << multiply << endl;
-            for (int k = 0; k < order; k++) {
-                if (i != j)
-                    matrix[j][k] = matrix[j][k] - matrix[i][k] * multiply;
-                    cout << endl << "Matriz " << j << " " << k << " " << matrix[j][k] << endl;
+        if (matrix[i][i] == 0) {
+            bool swapped = false;
+            for (int k = i + 1; k < order; k++) {
+                if (matrix[k][i] != 0) {
+                    switchLines(matrix, i, k);
+                    determinant *= -1; // Muda o sinal do determinante
+                    swapped = true;
+                    break;
+                }
+            }
+            if (!swapped) {
+                // Se não é possível trocar a linha, a matriz é singular
+                return 0;
+            }
+        }
+
+        for (int j = i + 1; j < order; j++) {
+            double multiplier = matrix[j][i] / matrix[i][i];
+            for (int k = i; k < order; k++) {
+                matrix[j][k] -= matrix[i][k] * multiplier;
             }
         }
     }
 
+    // Calculate the determinant by multiplying the diagonal elements
     for (int i = 0; i < order; i++) {
-        cout << endl << "DETERMINANTe " << i << " " << determinant << endl;
-        cout << endl << "Matriz " << i << " " << matrix[i][i] << endl;
         determinant *= matrix[i][i];
     }
 
     cout << endl << "DETERMINANTEEEE " << determinant << endl;
-
     return determinant;
 }
 
