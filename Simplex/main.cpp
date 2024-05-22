@@ -17,6 +17,7 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order);
 vector<vector<double>> sliceMatrix(vector<vector<double>>& matrix, int order);
 vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector<vector<double>>& matrix_2, int line_size, int col_size);
 
+
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
@@ -38,7 +39,6 @@ int main() {
     printf("O determinante da matriz é: %d \n", determinant);
     result = sliceMatrix(matrix, matrix.size());
     printMatrix(result);
-    printf("OIEEEEEEEEEE cade minha matriz\n");
     matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
     printMatrix(matrix_checker);
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
