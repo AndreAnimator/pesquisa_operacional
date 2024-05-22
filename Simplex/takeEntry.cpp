@@ -30,36 +30,6 @@ FileContent readFile()
     return fileContent;
 }
 
-void readGoal(string str) {
-    string goal;
-    int i = 0;
-    while(str[i] != ' ') {
-        goal += str[i];
-        i++;
-    }
-    cout << goal << endl;
-    if (goal == "min" || goal == "minimizar" || "Min") {
-        cout << "Minimizar" << endl;
-    }
-    else if (goal == "max" ||goal == "maximizar" || "Max") {
-        cout << "Maximizar" << endl;
-    }
-    else {
-        cout << "Objetivo inválido" << endl;
-    }
-}
-
-vector<string> splitStringIntoVector(const string& str) {
-
-    stringstream ss(str);
-    vector<string> result;
-    string temp;
-    while (getline(ss, temp)) {
-        result.push_back(temp);
-    }
-    return result;
-}
-
 pair<float, int> parseTerm(const string& term) {
     size_t pos = term.find('x');
     if (pos == string::npos) {
