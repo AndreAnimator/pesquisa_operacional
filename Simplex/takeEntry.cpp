@@ -117,7 +117,7 @@ vector<string> tokenizeExpression(const string &expression)
     return newTokens;
 }
 
-vector<double> catchExpression(string str, int tam = 0)
+vector<double> catchExpression(string str, int tam = 0, bool isExpression = true)
 {
     int i = 0;
     size_t equalPos = str.find('=');
@@ -166,8 +166,8 @@ FileContent readFile()
 int main()
 {
     FileContent fileContent = readFile();
-    vector<double> goal = catchExpression(fileContent.goal);
     vector<vector<double>> expressions;
+    vector<double> goal = catchExpression(fileContent.goal,,false);
     // Tem que tratar para ignorar o sinal de maior e menor igual no final
     // for (int i = 0; i < fileContent.expressions.size(); i++)
     // {
