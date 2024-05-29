@@ -16,10 +16,21 @@ void printMatrix(vector<vector<double>> matrix);
 int gaussJordanElimination(vector<vector<double>>& matrix, int order);
 vector<vector<double>> sliceMatrix(vector<vector<double>>& matrix, int order);
 vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector<vector<double>>& matrix_2, int line_size, int col_size);
+vector<vector<double>> invertMatrix(vector<vector<double>> matrix);
+vector<vector<double>> basicSolution(vector<vector<double>> B, vector<vector<double>> xb, int n, int m);
+double functionGoalAvaliation(vector<double> c, vector<vector<double>> B, vector<double> x); //auxiliar da solução básica
+vector<vector<double>> simpleMultiplierVector(vector<vector<double>> B, vector<vector<double>> lambda);
+vector<double> relativeCosts(vector<double> c, vector<double> a, vector<double> lambdaT);
+vector<double> baseVariableDetermination(vector<double> c, int n, int m);
+bool otimalTest(vector<double> c);
+double simplesDirection(vector<vector<double>> B, vector<vector<double>> a);
+
 
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
+
+    /*
     vector<vector<double>> original_matrix;
     vector<vector<double>> matrix;
     vector<vector<double>> result;
@@ -41,8 +52,61 @@ int main() {
     printf("OIEEEEEEEEEE cade minha matriz\n");
     matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
     printMatrix(matrix_checker);
+    */
+
     // A leitura da matriz é feita normalmente matrix[linha][coluna]
     // Exemplo: matrix[0][0] retorna o primeiro elemento da matriz
+    printf("\nComeça aqui o método simplex");
+    
+
+    // --------------- FASE  1 ----------------
+
+    // Dados do problema
+    vector<double> x1 = {1, 1, 1, 0, 0};
+    vector<double> x2 = {1, -1, 0, 1, 0};
+    vector<double> x3 = {-1, 1, 0, 0, 1};
+    vector<vector<double>> b = {{6, 4, 4}};
+    // Função mínima
+    vector<double> f = {-1, -2, 0, 0, 0};
+    vector<vector<double>> A = {x1, x2, x3};
+
+    // com esses valores
+    vector<double> xn = {0, 0};
+    int n = 2;
+    int m = 4;
+
+    // obtem-se esses valores das variáveis básicas
+    vector<double> Blinha = {3, 4, 5};
+    vector<vector<double>> B = {{3}, {4}, {5}};
+    vector<double> N = {1, 2};
+
+    // --------------- FASE  2 ----------------
+    
+    // iteração
+
+    // ---PASSO 1---
+    //cáculo da solução básica
+
+    //xb = x3, x4, x5
+    //xb = B^-1*b
+    //obtem-se:
+    // vector<double> xb = {6, 4, 4};
+
+    vector<vector<double>> xb = basicSolution(B, b, 2, 4);
+    printf("Resultado esperado: xb = {6, 4, 4};\n");
+    printMatrix(xb);
+
+    //avaliação da função objetivo
+    //f(x) = cb1xb1 + cb2xb2 + cb3xb3 = 0*6 + 0*4 + 0*4
+
+    // ---PASSO 2---
+    //cáculo dos custos relativos
+
+    //c^tB = (cB1 , cB2 , cB3 ) = (c3, c4, c5) = (0, 0, 0).
+
+    vector<double> c = {0, 0, 0};
+
+
     return 0;
 }
 
@@ -279,4 +343,72 @@ vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector
         new_line.clear();
     }
     return result;
+}
+
+vector<vector<double>> invertMatrix(vector<vector<double>> matrix){
+    vector<vector<double>> original_matrix;
+    vector<vector<double>> result;
+    vector<vector<double>> matrix_checker;
+    original_matrix = matrix;
+    int determinant = calcDeterminant(matrix, matrix.size());
+    printf("Matriz original:");
+    printMatrix(original_matrix);
+    printf("\n");
+    expandMatrix(matrix, matrix.size());
+    gaussJordanElimination(matrix, matrix.size());
+    printf("O determinante da matriz é: %d \n", determinant);
+    result = sliceMatrix(matrix, matrix.size());
+    printf("\nMatriz inversa: \n");
+    printMatrix(result);
+    printf("OIEEEEEEEEEE cade minha matriz\n");
+    matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
+    printf("Checando a matriz...");
+    printMatrix(matrix_checker);
+    return result;
+}
+
+vector<vector<double>> basicSolution(vector<vector<double>> B, vector<vector<double>> b, int n, int m){
+    // xB =(x3, x4, x5), ou seja Xb = (xn, ..., xm)
+    // xB ← B^−1 * b (equivalentemente, resolva o sistema B ˆxB = b)
+    // ˆxN ← 0
+    // multiplyMatrices(B, xb, B.size(), xb.size());
+    printf("\nEntrou no vetor\n");
+    vector<vector<double>> xb = multiplyMatrices(B, b, B.size(), b.size());
+    printf("Multiplicação de B por b:\n");
+    printMatrix(xb);
+    vector<vector<double>> result;
+    vector<double> new_line;
+    for(int i = 0; i < xb.size(); i++){
+        for(int j = n; j <= m; j++){
+            new_line.push_back(xb[i][j]);
+        }
+        result.push_back(new_line);
+        new_line.clear();
+    }
+    printf("\nResultado: \n");
+    printMatrix(result);
+    return result;
+}
+
+vector<vector<double>> simpleMultiplierVector(vector<vector<double>> B, vector<vector<double>> lambda){
+    //funcao pra calcular transposta
+    // cb = Bt * lambda
+    return multiplyMatrices(B, lambda, B.size(), lambda.size());
+}
+
+vector<double> relativeCosts(vector<double> c, vector<double> a, vector<double> lambdaT){
+    //cNj ← cNj − λT aNj j = 1, 2, ..., n − m
+    return a;
+}
+vector<double> baseVariableDetermination(vector<double> c, int n, int m){
+    // cNk ← min. {ˆcNj , j = 1, 2, ..., n − m} (a variavel xNk entra na base)
+    return c;
+}
+bool otimalTest(vector<double> c){
+    // Se ˆcNk ≥ 0, ent˜ao: pare {solu¸c˜ao na itera¸c˜ao atual ´e ´otima}
+    return true;
+}
+double simplesDirection(vector<vector<double>> B, vector<vector<double>> a){
+    // y ← B−1aNk (equivalentemente, resolva o sistema: By = aNk )
+    return 0.1;
 }
