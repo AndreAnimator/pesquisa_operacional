@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <iomanip>
 
-
 #define POSITIVE_SIGNAL true
 #define NEGATIVE_SIGNAL false
 
@@ -130,15 +129,29 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
  */
     if (str.find(">=") != string::npos || str.find(">") != string::npos)
     {
-        limitPosition = str.find(">");
         limitPosition = str.find(">=");
-        haveOneBiggerThanZero = true;
+        if (limitPosition == string::npos)
+        {
+            limitPosition = str.find(">");
+            if (limitPosition != string::npos)
+            {
+                oneSimbol = true;
+            }
+        }
         haveInequantionSignal = true;
+        haveOneBiggerThanZero = true;
     }
     else if (str.find("<=") != string::npos || str.find("<") != string::npos)
     {
-        limitPosition = str.find("<");
         limitPosition = str.find("<=");
+        if (limitPosition == string::npos)
+        {
+            limitPosition = str.find("<");
+            if (limitPosition != string::npos)
+            {
+                oneSimbol = true;
+            }
+        }
         haveInequantionSignal = true;
     }
     else if (str.find("=") != string::npos)
@@ -147,10 +160,14 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
         {
             haveOneBiggerThanZero = true;
         }
-        limitPosition = str.find("=");
+        if (!oneSimbol)
+        {
+            limitPosition = str.find("=");
+        }
         if (!is_expression)
         {
-            string aux = str.substr(0, str.size() - limitPosition - 1);
+            limitPosition = str.find("=");
+            string aux = str.substr(0, limitPosition - 1);
             if (aux.find("max") != string::npos || aux.find("Max") != string::npos || aux.find("Maximização") != string::npos || aux.find("Maximize") != string::npos)
             {
                 isMaximization = true;
@@ -173,8 +190,12 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
     
     if (haveInequantionSignal)
     {
-        b_value = str.substr(limitPosition + 2);
-        if (str.find(">=") != string::npos)
+        b_value = str.substr(limitPosition + 1);
+        if (!oneSimbol)
+        {
+            b_value = str.substr(limitPosition + 2);
+        }
+        if (str.find(">=") != string::npos || str.find(">") != string::npos)
             slack_value.push_back(make_pair(stod(b_value), POSITIVE_SIGNAL));
         else
             slack_value.push_back(make_pair(stod(b_value), NEGATIVE_SIGNAL));
