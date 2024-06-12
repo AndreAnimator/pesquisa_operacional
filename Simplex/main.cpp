@@ -24,6 +24,7 @@ vector<double> relativeCosts(vector<double> c, vector<double> a, vector<double> 
 vector<double> baseVariableDetermination(vector<double> c, int n, int m);
 bool otimalTest(vector<double> c);
 double simplesDirection(vector<vector<double>> B, vector<vector<double>> a);
+vector<vector<double>> columnToRow(vector<vector<double>> column, int column_index, int column_size);
 
 
 int main() {
@@ -65,7 +66,7 @@ int main() {
     // depois eu faço isso kkk
     vector<vector<double>> B = {{1, 0, 1}, {1, 1, -1}, {-1, 0, 1}};
     
-    vector<vector<double>> N = {{1, 0}, {0, 1}, {0, 0}};
+    vector<vector<double>> N = {{1, 0}, {0, 0}, {0, 1}};
 
     // Vetor das variáveis básicas
     // b é novamente a posição dos indices do vetor Bindices
@@ -88,6 +89,8 @@ int main() {
     vector<vector<double>> BminusOne = invertMatrix(B);
 
     vector<vector<double>> xb = basicSolution(BminusOne, b);
+
+    cout << "\nSolução básica: " << endl;
     printMatrix(xb);
 
     // vector<vector<double>> xn = {{0}, {0}};
@@ -110,32 +113,36 @@ int main() {
     printMatrix(ctb);
 
     cout << "\nAgora multiplica Custos Básicos: " << endl;
-    printMatrix(ctb);
+    printMatrix(columnToRow(ctb, 0, 3));
     cout << "\nMatrix B: " << endl;
     printMatrix(B);
     cout << "\nPela matriz inversa de B: " << endl;
     printMatrix(BminusOne);
 
-    vector<vector<double>> lambda = simpleMultiplierVector(ctb, BminusOne);
+    //Passo 2: {Cálculo dos custos relativos}
+    //2.1 vetor multiplicador simplex
+
+    vector<vector<double>> lambda = simpleMultiplierVector(BminusOne, columnToRow(ctb, 0, 3));
     //resultado esperado: -3/2, 0, -1/2
 
-    //NA APOSTILA TÁ INVERTIDO !  !  ! !  ! !  !
-    //No site tá dando o resultado 1/2, -2, -1/5
-    //Que foi oq foi printado
     cout << "\n Vetor Multiplicador Simplex: " << endl;
     printMatrix(lambda);
+
+    //2.2 Custos relativos
+    //Custos relativos:
 
     vector<vector<double>> a;
 
     for(int i = 0; i < N.size(); i++){
-        newline.push_back(A[i][Nindices[i] - 1]);
+        for(int j = 0; j < Nindices.size(); j++){
+            newline.push_back(A[i][Nindices[j] - 1]);
+        }
         a.push_back(newline);
         newline.clear();
     }
     cout << "\n Os valores de a: " << endl;
     printMatrix(a);
 
-    //Custos relativos:
     for(int i = 0; i < N.size(); i++){
         c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
     }
@@ -147,6 +154,9 @@ int main() {
     newline.clear();
     cout << "\nValor multiplicado: " << endl;
     printMatrix(multiplyMatrices(lambdaT, a, lambdaT.size(), a[0].size()));
+
+    //2.3 Determinação da variável a entrar na base:
+
     return 0;
 }
 
@@ -413,7 +423,7 @@ vector<vector<double>> basicSolution(vector<vector<double>> B, vector<vector<dou
     // ˆxN ← 0
     // multiplyMatrices(B, xb, B.size(), xb.size());
     printf("\nEntrou no vetor\n");
-    vector<vector<double>> result = multiplyMatrices(B, b, B.size(), b.size());
+    vector<vector<double>> result = multiplyMatrices(B, b, B.size(), b[0].size());
     return result;
 }
 
@@ -438,4 +448,16 @@ bool otimalTest(vector<double> c){
 double simplesDirection(vector<vector<double>> B, vector<vector<double>> a){
     // y ← B−1aNk (equivalentemente, resolva o sistema: By = aNk )
     return 0.1;
+}
+
+vector<vector<double>> columnToRow(vector<vector<double>> column, int column_index, int column_size){
+    vector<double> newline;
+    vector<vector<double>> row;
+
+    for(int i = 0; i < column_size; i++){
+        newline.push_back(column[i][column_index]);
+    }
+    row.push_back(newline);
+    
+    return row;
 }
