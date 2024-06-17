@@ -13,7 +13,13 @@ using namespace std;
 
 bool isMaximization = false;
 bool haveOneBiggerThanZero = false;
-vector<double> goal;
+
+typedef struct 
+{
+    vector<double> goal;
+    vector<vector<double>> expressions;
+    vector<double> b;
+} MathRes;
 
 typedef struct
 {
@@ -250,7 +256,7 @@ FileContent readFile()
     return fileContent;
 }
 
-void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index)
+void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index, vector<double> goal)
  {
     vector<vector<double>> aux_expression(expressions.size(), vector<double>(slack_variables.size(), 0.0));
     int i;
@@ -294,19 +300,17 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
 
 FileContent fileContent = readFile();
 
-int main()
+void solverInput(vector<double> goal, vector<vector<double>> expressions, vector<double> b)
 {
     int max_index = 0;
     vector<pair<double, bool>> slack_variables;
     goal = parser(fileContent.goal, max_index, slack_variables, false);
-    vector<double> b;
-    vector<vector<double>> expressions;
     int limit_index = max_index;
     for (int i = 0; i < fileContent.expressions.size(); i++)
     {
         expressions.push_back(parser(fileContent.expressions[i], max_index, slack_variables, true));
     }
-    addSlackVariables(expressions, b, slack_variables, limit_index);
+    addSlackVariables(expressions, b, slack_variables, limit_index, goal);
     cout << "Função Objetivo: \n";
     for (int i = 0; i < goal.size(); i++)
     {
@@ -331,5 +335,4 @@ int main()
         cout << fixed << setprecision(3) << b[i] << " ";
     }
     cout << endl;
-    return 0;
 }
