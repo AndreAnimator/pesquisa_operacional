@@ -25,6 +25,7 @@ vector<double> baseVariableDetermination(vector<double> c, int n, int m);
 bool otimalTest(vector<double> c);
 double simplesDirection(vector<vector<double>> B, vector<vector<double>> a);
 vector<vector<double>> columnToRow(vector<vector<double>> column, int column_index, int column_size);
+vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes);
 
 
 int main() {
@@ -53,7 +54,7 @@ int main() {
     // x1 + x2 + x3 = 4
     // x1 + x4 = 3
     // x2 + x5 = 7/2
-    vector<vector<double>> A = {{1, 0, 1, 1, 0}, {1, 1, -1, 0, 0}, {-1, 0, 1, 0, 1}};
+    vector<vector<double>> A = {{1, 1, 1, 0, 0}, {1, -1, 0, 1, 0}, {-1, 1, 0, 0, 1}};
 
     // vetor de indices básicos
     vector<double> Bindices = {1, 4, 2};
@@ -114,15 +115,23 @@ int main() {
 
     cout << "\nAgora multiplica Custos Básicos: " << endl;
     printMatrix(columnToRow(ctb, 0, 3));
-    cout << "\nMatrix B: " << endl;
-    printMatrix(B);
-    cout << "\nPela matriz inversa de B: " << endl;
-    printMatrix(BminusOne);
+    // cout << "\nMatrix B: " << endl;
+    // B = obtainPartition(A, Bindices);
+    // printMatrix(B);
+    // cout << "\nPela matriz inversa de B: " << endl;
+    // BminusOne = invertMatrix(B);
+    // cout << "\n----------\n\n" << endl;
+    // printMatrix(BminusOne);
 
     //Passo 2: {Cálculo dos custos relativos}
     //2.1 vetor multiplicador simplex
-
-    vector<vector<double>> lambda = simpleMultiplierVector(BminusOne, columnToRow(ctb, 0, 3));
+    vector<vector<double>> ctb_row;
+    ctb_row = columnToRow(ctb, 0, 3);
+    cout << "B: " << endl;
+    printMatrix(BminusOne);
+    cout << "Numero line size" << ctb_row.size() << endl;
+    cout << "Numero col size" << BminusOne[0].size() << endl;
+    vector<vector<double>> lambda = multiplyMatrices(ctb_row, BminusOne, ctb_row.size(), BminusOne[0].size());
     //resultado esperado: -3/2, 0, -1/2
 
     cout << "\n Vetor Multiplicador Simplex: " << endl;
@@ -131,21 +140,12 @@ int main() {
     //2.2 Custos relativos
     //Custos relativos:
 
-    vector<vector<double>> a;
+    vector<vector<double>> a = obtainPartition(A, Nindices);
 
-    for(int i = 0; i < N.size(); i++){
-        for(int j = 0; j < Nindices.size(); j++){
-            newline.push_back(A[i][Nindices[j] - 1]);
-        }
-        a.push_back(newline);
-        newline.clear();
-    }
+    
     cout << "\n Os valores de a: " << endl;
     printMatrix(a);
 
-    for(int i = 0; i < N.size(); i++){
-        c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
-    }
     vector<vector<double>> lambdaT;
     for(int i = 0; i < lambda.size(); i++){
         newline.push_back(lambda[i][0]);
@@ -153,9 +153,44 @@ int main() {
     lambdaT.push_back(newline);
     newline.clear();
     cout << "\nValor multiplicado: " << endl;
-    printMatrix(multiplyMatrices(lambdaT, a, lambdaT.size(), a[0].size()));
+    cout << "Multiplica: " << endl;
+    printMatrix(lambda);
+    cout << "por: ..." << endl;
+    for(int i = 0; i < a[0].size(); i++){
+        vector<vector<double>> a_aux;
+        vector<vector<double>> multiply_aux;
+        for(int j = 0; j < a.size(); j++){
+            newline.push_back(a[j][i]);
+            a_aux.push_back(newline);
+            newline.clear();
+        }
+        cout << "O valor de a aux: " << endl;
+        printMatrix(a_aux);
+        multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
+        cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
+        // printMatrix(c);
+        // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0]; 
+    }
+    
+    for(int i = 0; i < N.size(); i++){
+        c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
+    }
 
     //2.3 Determinação da variável a entrar na base:
+
+    bool hasSolution = false;
+    bool min = N[0][0];
+
+    for(int i; i < N[0].size(); i++){
+        if(N[0][i] < min)
+            min = N[0][i];
+    }
+
+    cout << "Valor mínimo é " << min << endl;
+    if(min > 0){
+        hasSolution = true;
+    }
+    printMatrix(xb);
 
     return 0;
 }
@@ -380,18 +415,26 @@ vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector
     vector<vector<double>> result;
     double aux;
     vector<double> new_line;
-    cout << "Quantidade de linhas: " << row_size << "\nQuantidade de colunas: " << col_size << endl;
-    for (int i = 0; i < row_size; i++) {
-        for (int j = 0; j < col_size; j++) {
-            aux = 0;
-            for (int k = 0; k < row_size; k++) {
-                aux += matrix_1[i][k] * matrix_2[k][j];
+    // cout << "Quantidade de linhas: " << row_size << "Quantidade de linhas pegando da matriz: " << matrix_1[0].size() << endl;
+    // cout << "Quantidade de colunas: " << col_size << "Quantidade de colunas pegando da matriz: " << matrix_2.size() << endl;
+    if(matrix_1[0].size() == matrix_2.size()){
+        for (int i = 0; i < matrix_1.size(); i++) {
+            for (int j = 0; j < matrix_2[0].size(); j++) {
+                aux = 0;
+                for (int k = 0; k < matrix_2.size(); k++) {
+                    // cout << "matrix_1 [" << i << " " << k << "] * [" << "matrix_2 " << k << " " << j << "]"<< endl;
+                    // cout << matrix_1[i][k] << " * " << matrix_2[k][j] << " =" << endl;
+                    aux += matrix_1[i][k] * matrix_2[k][j];
+                    // cout << aux << endl;
+                }
+                new_line.push_back(aux);
             }
-            new_line.push_back(aux);
+            result.push_back(new_line);
+            new_line.clear();
         }
-        result.push_back(new_line);
-        new_line.clear();
     }
+    else
+        cout << "Coluna e linha de tamanho diferente" << endl;
     return result;
 }
 
@@ -401,19 +444,19 @@ vector<vector<double>> invertMatrix(vector<vector<double>> matrix){
     vector<vector<double>> matrix_checker;
     original_matrix = matrix;
     int determinant = calcDeterminant(matrix, matrix.size());
-    printf("Matriz original:");
-    printMatrix(original_matrix);
-    printf("\n");
+    // printf("Matriz original:");
+    // printMatrix(original_matrix);
+    // printf("\n");
     expandMatrix(matrix, matrix.size());
     gaussJordanElimination(matrix, matrix.size());
-    printf("O determinante da matriz é: %d \n", determinant);
+    // printf("O determinante da matriz é: %d \n", determinant);
     result = sliceMatrix(matrix, matrix.size());
-    printf("\nMatriz inversa: \n");
-    printMatrix(result);
-    printf("OIEEEEEEEEEE cade minha matriz\n");
+    // printf("\nMatriz inversa: \n");
+    // printMatrix(result);
+    // printf("OIEEEEEEEEEE cade minha matriz\n");
     matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
-    printf("Checando a matriz...");
-    printMatrix(matrix_checker);
+    // printf("Checando a matriz...");
+    // printMatrix(matrix_checker);
     return result;
 }
 
@@ -459,5 +502,32 @@ vector<vector<double>> columnToRow(vector<vector<double>> column, int column_ind
     }
     row.push_back(newline);
     
+    return row;
+}
+
+vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes){
+    vector<double> newline;
+    vector<vector<double>> row;
+
+    // cout << "\nMatriz A: " << endl;
+
+    // printMatrix(A);
+
+    // cout << "\nSerá retirada as colunas: " << endl;
+
+    // for(int i = 0; i < indexes.size(); i++){
+    //     cout << indexes[i] << " ";
+    // }
+
+    // cout << endl;
+
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < indexes.size(); j++){
+            newline.push_back(A[i][indexes[j] - 1]);
+        }
+        row.push_back(newline);
+        newline.clear();
+    }
+
     return row;
 }
