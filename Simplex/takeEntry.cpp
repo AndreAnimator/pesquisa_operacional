@@ -14,7 +14,8 @@ using namespace std;
 bool isMaximization = false;
 bool haveOneBiggerThanZero = false;
 vector<double> goal;
-
+vector<vector<double>> expressions;
+vector<double> b;
 typedef struct
 {
     string goal;
@@ -281,14 +282,10 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
         for_each(goal.begin(), goal.end(), [](double &value) {
             value *= -1;
         });
-        for_each(expressions.begin(), expressions.end(), [](vector<double> &expression) {
-            for_each(expression.begin(), expression.end(), [](double &value) {
-                value *= -1;
-            });
-        });
-        for_each(b.begin(), b.end(), [](double &value) {
-            value *= -1;
-        });
+    }
+    for (int i = 0; i < slack_variables.size(); i++)
+    {
+        goal.push_back(0.0);
     }
 }
 
