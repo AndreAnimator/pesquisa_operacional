@@ -28,6 +28,7 @@ vector<vector<double>> columnToRow(vector<vector<double>> column, int column_ind
 vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes);
 
 
+
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
@@ -110,6 +111,7 @@ int main() {
         ctb.push_back(newline);
         newline.clear();
     }
+  
     cout << "\n Custos básicos: " << endl;
     printMatrix(ctb);
 
