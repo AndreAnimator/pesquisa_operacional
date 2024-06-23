@@ -16,33 +16,183 @@ void printMatrix(vector<vector<double>> matrix);
 int gaussJordanElimination(vector<vector<double>>& matrix, int order);
 vector<vector<double>> sliceMatrix(vector<vector<double>>& matrix, int order);
 vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector<vector<double>>& matrix_2, int line_size, int col_size);
+vector<vector<double>> invertMatrix(vector<vector<double>> matrix);
+vector<vector<double>> basicSolution(vector<vector<double>> B, vector<vector<double>> xb);
+double functionGoalAvaliation(vector<double> c, vector<vector<double>> B, vector<double> x); //auxiliar da solução básica
+vector<vector<double>> simpleMultiplierVector(vector<vector<double>> ctb, vector<vector<double>> B);
+vector<double> relativeCosts(vector<double> c, vector<double> a, vector<double> lambdaT);
+vector<double> baseVariableDetermination(vector<double> c, int n, int m);
+bool otimalTest(vector<double> c);
+double simplesDirection(vector<vector<double>> B, vector<vector<double>> a);
+vector<vector<double>> columnToRow(vector<vector<double>> column, int column_index, int column_size);
+vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes);
+
 
 
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
-    vector<vector<double>> original_matrix;
-    vector<vector<double>> matrix;
-    vector<vector<double>> result;
-    vector<vector<double>> matrix_checker;
-    if (getMatrix(matrix) == 1) 
-    {
-        return 1;
+    
+    printf("\nComeça aqui o método simplex");
+    
+
+    // --------------- pré FASE  1 ----------------
+
+    // Dados do problema
+    vector<vector<double>> b = {{6}, {4}, {4}};
+    // Função mínima
+    vector<double> f = {-1, -2, 0, 0, 0};
+
+    // com esses valores
+    vector<double> xn = {0, 0};
+    int n = 2;
+    int m = 4;
+
+    // obtem-se esses valores das variáveis básicas
+    vector<double> Blinha = {3, 4, 5};
+
+    // Eu não lembro o que eu tava tentando fazer acima dessa linha. LOL
+    // x1 + x2 + x3 = 4
+    // x1 + x4 = 3
+    // x2 + x5 = 7/2
+    vector<vector<double>> A = {{1, 1, 1, 0, 0}, {1, -1, 0, 1, 0}, {-1, 1, 0, 0, 1}};
+
+    // vetor de indices básicos
+    vector<double> Bindices = {1, 4, 2};
+
+    // vetor de indices não básicos
+    vector<double> Nindices = {3, 5};
+
+    // com isso obtem-se as matrizes B e N
+    // são obtidas a partir das colunas de A nos indíces de Bindices e Nindices respectivamente
+    // depois eu faço isso kkk
+    vector<vector<double>> B = {{1, 0, 1}, {1, 1, -1}, {-1, 0, 1}};
+    
+    vector<vector<double>> N = {{1, 0}, {0, 0}, {0, 1}};
+
+    // Vetor das variáveis básicas
+    // b é novamente a posição dos indices do vetor Bindices
+    vector<vector<double>> c = {{-1}, {-2}, {0}, {0}, {0}};
+
+    // PERGUNTAR AO PROFESSOR SE É MELHOR FAZER SÓ UM VETOR
+    // OU SE PODE SER SEPARADO EM CTB E CTN
+
+    // --------------- FASE  1 ----------------
+    // iteração
+
+    // ---PASSO 1---
+    //cáculo da solução básica
+
+    //xb = x3, x4, x5
+    //xb = B^-1*b
+    //obtem-se:
+    // vector<double> xb = {6, 4, 4};
+
+    vector<vector<double>> BminusOne = invertMatrix(B);
+
+    vector<vector<double>> xb = basicSolution(BminusOne, b);
+
+    cout << "\nSolução básica: " << endl;
+    printMatrix(xb);
+
+    // vector<vector<double>> xn = {{0}, {0}};
+
+    // ---PASSO 2---
+    //cáculo dos custos relativos
+
+    //vetor multiplicador simplex
+    //c^tB = (cB1 , cB2 , cB3 ) = (c3, c4, c5) = (-1, 0, -2).
+    vector<vector<double>> ctb;
+
+    vector<double> newline;
+
+    for(int i = 0; i < Bindices.size(); i++){
+        newline.push_back(c[Bindices[i] - 1][0]);
+        ctb.push_back(newline);
+        newline.clear();
     }
-    original_matrix = matrix;
-    int determinant = calcDeterminant(matrix, matrix.size());
-    printMatrix(matrix);
-    printf("\n");
-    expandMatrix(matrix, matrix.size());
-    gaussJordanElimination(matrix, matrix.size());
-    printMatrix(matrix);
-    printf("O determinante da matriz é: %d \n", determinant);
-    result = sliceMatrix(matrix, matrix.size());
-    printMatrix(result);
-    matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
-    printMatrix(matrix_checker);
-    // A leitura da matriz é feita normalmente matrix[linha][coluna]
-    // Exemplo: matrix[0][0] retorna o primeiro elemento da matriz
+    cout << "\n Custos básicos: " << endl;
+    printMatrix(ctb);
+
+    cout << "\nAgora multiplica Custos Básicos: " << endl;
+    printMatrix(columnToRow(ctb, 0, 3));
+    // cout << "\nMatrix B: " << endl;
+    // B = obtainPartition(A, Bindices);
+    // printMatrix(B);
+    // cout << "\nPela matriz inversa de B: " << endl;
+    // BminusOne = invertMatrix(B);
+    // cout << "\n----------\n\n" << endl;
+    // printMatrix(BminusOne);
+
+    //Passo 2: {Cálculo dos custos relativos}
+    //2.1 vetor multiplicador simplex
+    vector<vector<double>> ctb_row;
+    ctb_row = columnToRow(ctb, 0, 3);
+    cout << "B: " << endl;
+    printMatrix(BminusOne);
+    cout << "Numero line size" << ctb_row.size() << endl;
+    cout << "Numero col size" << BminusOne[0].size() << endl;
+    vector<vector<double>> lambda = multiplyMatrices(ctb_row, BminusOne, ctb_row.size(), BminusOne[0].size());
+    //resultado esperado: -3/2, 0, -1/2
+
+    cout << "\n Vetor Multiplicador Simplex: " << endl;
+    printMatrix(lambda);
+
+    //2.2 Custos relativos
+    //Custos relativos:
+
+    vector<vector<double>> a = obtainPartition(A, Nindices);
+
+    
+    cout << "\n Os valores de a: " << endl;
+    printMatrix(a);
+
+    vector<vector<double>> lambdaT;
+    for(int i = 0; i < lambda.size(); i++){
+        newline.push_back(lambda[i][0]);
+    }
+    lambdaT.push_back(newline);
+    newline.clear();
+    cout << "\nValor multiplicado: " << endl;
+    cout << "Multiplica: " << endl;
+    printMatrix(lambda);
+    cout << "por: ..." << endl;
+    for(int i = 0; i < a[0].size(); i++){
+        vector<vector<double>> a_aux;
+        vector<vector<double>> multiply_aux;
+        for(int j = 0; j < a.size(); j++){
+            newline.push_back(a[j][i]);
+            a_aux.push_back(newline);
+            newline.clear();
+        }
+        cout << "O valor de a aux: " << endl;
+        printMatrix(a_aux);
+        multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
+        cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
+        // printMatrix(c);
+        // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0]; 
+    }
+    
+    for(int i = 0; i < N.size(); i++){
+        c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
+    }
+
+    //2.3 Determinação da variável a entrar na base:
+
+    bool hasSolution = false;
+    bool min = N[0][0];
+
+    for(int i; i < N[0].size(); i++){
+        if(N[0][i] < min)
+            min = N[0][i];
+    }
+
+    cout << "Valor mínimo é " << min << endl;
+    if(min > 0){
+        hasSolution = true;
+    }
+    printMatrix(xb);
+
     return 0;
 }
 
@@ -266,17 +416,119 @@ vector<vector<double>> multiplyMatrices(vector<vector<double>>& matrix_1, vector
     vector<vector<double>> result;
     double aux;
     vector<double> new_line;
-    cout << "Quantidade de linhas: " << row_size << "\nQuantidade de colunas" << col_size << endl;
-    for (int i = 0; i < row_size; i++) {
-        for (int j = 0; j < col_size; j++) {
-            aux = 0;
-            for (int k = 0; k < row_size; k++) {
-                aux += matrix_1[i][k] * matrix_2[k][j];
+    // cout << "Quantidade de linhas: " << row_size << "Quantidade de linhas pegando da matriz: " << matrix_1[0].size() << endl;
+    // cout << "Quantidade de colunas: " << col_size << "Quantidade de colunas pegando da matriz: " << matrix_2.size() << endl;
+    if(matrix_1[0].size() == matrix_2.size()){
+        for (int i = 0; i < matrix_1.size(); i++) {
+            for (int j = 0; j < matrix_2[0].size(); j++) {
+                aux = 0;
+                for (int k = 0; k < matrix_2.size(); k++) {
+                    // cout << "matrix_1 [" << i << " " << k << "] * [" << "matrix_2 " << k << " " << j << "]"<< endl;
+                    // cout << matrix_1[i][k] << " * " << matrix_2[k][j] << " =" << endl;
+                    aux += matrix_1[i][k] * matrix_2[k][j];
+                    // cout << aux << endl;
+                }
+                new_line.push_back(aux);
             }
-            new_line.push_back(aux);
+            result.push_back(new_line);
+            new_line.clear();
         }
-        result.push_back(new_line);
-        new_line.clear();
     }
+    else
+        cout << "Coluna e linha de tamanho diferente" << endl;
     return result;
+}
+
+vector<vector<double>> invertMatrix(vector<vector<double>> matrix){
+    vector<vector<double>> original_matrix;
+    vector<vector<double>> result;
+    vector<vector<double>> matrix_checker;
+    original_matrix = matrix;
+    int determinant = calcDeterminant(matrix, matrix.size());
+    // printf("Matriz original:");
+    // printMatrix(original_matrix);
+    // printf("\n");
+    expandMatrix(matrix, matrix.size());
+    gaussJordanElimination(matrix, matrix.size());
+    // printf("O determinante da matriz é: %d \n", determinant);
+    result = sliceMatrix(matrix, matrix.size());
+    // printf("\nMatriz inversa: \n");
+    // printMatrix(result);
+    // printf("OIEEEEEEEEEE cade minha matriz\n");
+    matrix_checker = multiplyMatrices(result, original_matrix, result.size(), original_matrix[0].size());
+    // printf("Checando a matriz...");
+    // printMatrix(matrix_checker);
+    return result;
+}
+
+vector<vector<double>> basicSolution(vector<vector<double>> B, vector<vector<double>> b){
+    // xB =(x3, x4, x5), ou seja Xb = (xn, ..., xm)
+    // xB ← B^−1 * b (equivalentemente, resolva o sistema B ˆxB = b)
+    // ˆxN ← 0
+    // multiplyMatrices(B, xb, B.size(), xb.size());
+    printf("\nEntrou no vetor\n");
+    vector<vector<double>> result = multiplyMatrices(B, b, B.size(), b[0].size());
+    return result;
+}
+
+vector<vector<double>> simpleMultiplierVector(vector<vector<double>> ctb, vector<vector<double>> B){
+    //funcao pra calcular transposta
+    // cb = Bt * lambda
+    return multiplyMatrices(B, ctb, B.size(), ctb[0].size());
+}
+
+vector<double> relativeCosts(vector<double> c, vector<double> a, vector<double> lambdaT){
+    //cNj ← cNj − λT aNj j = 1, 2, ..., n − m
+    return a;
+}
+vector<double> baseVariableDetermination(vector<double> c, int n, int m){
+    // cNk ← min. {ˆcNj , j = 1, 2, ..., n − m} (a variavel xNk entra na base)
+    return c;
+}
+bool otimalTest(vector<double> c){
+    // Se ˆcNk ≥ 0, ent˜ao: pare {solu¸c˜ao na itera¸c˜ao atual ´e ´otima}
+    return true;
+}
+double simplesDirection(vector<vector<double>> B, vector<vector<double>> a){
+    // y ← B−1aNk (equivalentemente, resolva o sistema: By = aNk )
+    return 0.1;
+}
+
+vector<vector<double>> columnToRow(vector<vector<double>> column, int column_index, int column_size){
+    vector<double> newline;
+    vector<vector<double>> row;
+
+    for(int i = 0; i < column_size; i++){
+        newline.push_back(column[i][column_index]);
+    }
+    row.push_back(newline);
+    
+    return row;
+}
+
+vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes){
+    vector<double> newline;
+    vector<vector<double>> row;
+
+    // cout << "\nMatriz A: " << endl;
+
+    // printMatrix(A);
+
+    // cout << "\nSerá retirada as colunas: " << endl;
+
+    // for(int i = 0; i < indexes.size(); i++){
+    //     cout << indexes[i] << " ";
+    // }
+
+    // cout << endl;
+
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < indexes.size(); j++){
+            newline.push_back(A[i][indexes[j] - 1]);
+        }
+        row.push_back(newline);
+        newline.clear();
+    }
+
+    return row;
 }
