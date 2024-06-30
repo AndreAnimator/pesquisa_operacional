@@ -248,7 +248,7 @@ FileContent readFile()
     return fileContent;
 }
 
-void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index, vector<double> &goal)
+void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index, vector<double> &goal, bool &haveOneBiggerThanZero)
  {
     vector<vector<double>> aux_expression(expressions.size(), vector<double>(slack_variables.size(), 0.0));
     int i;
@@ -257,6 +257,7 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
         if (slack_variables[i].second == POSITIVE_SIGNAL)
         {
             aux_expression[i][i] = -1.0;
+            haveOneBiggerThanZero = true;
         }
         else
         {
@@ -288,7 +289,7 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
 
 FileContent fileContent = readFile();
 
-void readInput(vector<vector<double>> &expressions, vector<vector<double>> &b, vector<double> &goal)
+void readInput(vector<vector<double>> &expressions, vector<vector<double>> &b, vector<double> &goal, bool &haveOneBiggerThanZero)
 {
     cout << "Dentro da função readInput" << endl;
     int max_index = 0;
@@ -302,7 +303,7 @@ void readInput(vector<vector<double>> &expressions, vector<vector<double>> &b, v
         expressions.push_back(parser(fileContent.expressions[i], max_index, slack_variables, true));
     }
     b.push_back(vector<double>());
-    addSlackVariables(expressions, b[0], slack_variables, limit_index, goal);
+    addSlackVariables(expressions, b[0], slack_variables, limit_index, goal, haveOneBiggerThanZero);
     vector<vector<double>> aux(b[0].size(), vector<double>(1, 0.0));
     for (int i = 0; i < b[0].size(); i++)
     {

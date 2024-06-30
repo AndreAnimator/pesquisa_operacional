@@ -325,8 +325,14 @@ int main() {
     vector<vector<double>> b;
     vector<vector<double>> A;
     vector<double> f;
+    bool haveOneMax = false;
     cout << "ANTES DE LER\n";
-    readInput(A, b, f);
+    readInput(A, b, f, haveOneMax);
+    if (haveOneMax) {
+        cout << "O problema tem uma maximização" << endl;
+    } else {
+        cout << "O problema não têm uma max" << endl;
+    }
     cout << "A matriz A é: \n";
     printMatrix(A);
     printMatrix(b);
