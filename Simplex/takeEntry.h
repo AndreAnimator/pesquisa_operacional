@@ -13,9 +13,6 @@ using namespace std;
 
 bool isMaximization = false;
 bool haveOneBiggerThanZero = false;
-vector<double> goal;
-vector<vector<double>> expressions;
-vector<double> b;
 typedef struct
 {
     string goal;
@@ -251,7 +248,7 @@ FileContent readFile()
     return fileContent;
 }
 
-void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index)
+void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index, vector<double> &goal)
  {
     vector<vector<double>> aux_expression(expressions.size(), vector<double>(slack_variables.size(), 0.0));
     int i;
@@ -291,42 +288,26 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
 
 FileContent fileContent = readFile();
 
-int main()
+void readInput(vector<vector<double>> &expressions, vector<vector<double>> &b, vector<double> &goal)
 {
+    cout << "Dentro da função readInput" << endl;
     int max_index = 0;
     vector<pair<double, bool>> slack_variables;
     goal = parser(fileContent.goal, max_index, slack_variables, false);
-    vector<double> b;
-    vector<vector<double>> expressions;
+    cout << endl;
     int limit_index = max_index;
+    expressions.clear();
     for (int i = 0; i < fileContent.expressions.size(); i++)
     {
         expressions.push_back(parser(fileContent.expressions[i], max_index, slack_variables, true));
     }
-    addSlackVariables(expressions, b, slack_variables, limit_index);
-    cout << "Função Objetivo: \n";
-    for (int i = 0; i < goal.size(); i++)
+    b.push_back(vector<double>());
+    addSlackVariables(expressions, b[0], slack_variables, limit_index, goal);
+    vector<vector<double>> aux(b[0].size(), vector<double>(1, 0.0));
+    for (int i = 0; i < b[0].size(); i++)
     {
-        cout << fixed << setprecision(3) << goal[i] << " ";
+        aux[i][0] = b[0][i];
     }
-    cout << endl;
-    cout << "Matriz principal: \n";
-    for (int i = 0; i < expressions.size(); i++)
-    {
-        if (!expressions[i].empty())
-        {
-            for (int j = 0; j < expressions[i].size(); j++)
-            {
-                cout << fixed << setprecision(3) << expressions[i][j] << " ";
-            }
-            cout << endl;
-        }
-    }
-    cout << "b: \n";
-    for (int i = 0; i < b.size(); i++)
-    {
-        cout << fixed << setprecision(3) << b[i] << " ";
-    }
-    cout << endl;
-    return 0;
+    b.clear();
+    b = aux;
 }
