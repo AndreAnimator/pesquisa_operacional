@@ -315,7 +315,11 @@ int main() {
 
     setlocale(LC_ALL, "Portuguese");
     
-    printf("\nComeça aqui o método simplex");
+    printf("\nComeça aqui o método simplex\n");
+
+    // Variáveis auxiliares
+
+    vector<double> newline;
     
 
     // --------------- pré FASE  1 ----------------
@@ -328,90 +332,239 @@ int main() {
     bool haveOneMax = false;
     cout << "ANTES DE LER\n";
     readInput(A, b, f, haveOneMax);
+
+    cout << "DEPOIS DE LER\n";
+    
+    cout << "Matriz A: \n";
+    printMatrix(A);
+    cout << "\nMatriz b: \n";
+    printMatrix(b);
+    cout << "\nFunção f: \n";
+    for(int i = 0; i < f.size(); i++){
+        cout << f[i] << " ";
+    }
+
+    int iteracao = 0;
+    // vetor de custos
+    vector<vector<double>> x;
+    // vetores de variáveis básicas
+    vector<vector<double>> xtb;
+    // vetores de variáveis não-básicas:
+    vector<vector<double>> xtn;
+    // vetor de indices não básicos
+    vector<double> Nindices;
+    // vetor de indices básicos
+    vector<double> Bindices;
+
+   // matriz de Básicos
+    vector<vector<double>> B; 
+    
+    // matriz de Não Básicos
+    vector<vector<double>> N;
+
+    // vetor de custos:
+    vector<vector<double>> c;
+    for(int i = 0; i < f.size(); i++){
+        newline.push_back(f[i]);
+        c.push_back(newline);
+        newline.clear();
+    }
+    cout << "Vetor de custos:\n";
+    printMatrix(c);
+
+    // custos básicos:
+    vector<vector<double>> ctb;
+
+    // custos não básicos:
+    vector<vector<double>> ctn;
+
+    // vetor multiplicador simplex
+
+    vector<vector<double>> lambdaT;
+
+    //----------------------------------------------------------------------------------
+
+    // [FORMULAÇÃO DO PROBLEMA ARTIFICIAL]
+
+    // m número de restrições do problema
+    int m = A.size();
+    cout << "\nNúmero de restrições: \n" << m << endl;
+    // n número de variáveis do problema
+    int n = f.size() - m;
+    cout << "\nNúmero de variáveis: \n" << n << endl;
+    // Função objetivo
+    double minf = 0;
+    for(int i = n; i < n + m; i++){
+        minf += f[i];
+    }
+    cout << "\nFunção objetivo: " << minf << endl;
+    // Restrições
+    // Para cada restrição j = 1,..., m incluir uma variavel xn+j.
+    for(int i = 0; i < n + m; i++){
+        newline.push_back(f[i]);
+        x.push_back(newline);
+        newline.clear();
+    }
+    // Partição Básica inicial:
+    for(int i = n + 1; i <= n + m; i++){
+        Nindices.push_back(i);
+    }
+    for(int i = 1; i <= n; i++){
+        Bindices.push_back(i);
+    }
+    // vetores de variáveis básicas e não-básicas:
+    for(int i = 0; i < Bindices.size(); i++){
+        newline.push_back(f[Bindices[i]-1]);
+        xtb.push_back(newline);
+        newline.clear();
+    }
+    for(int i = 0; i < Nindices.size(); i++){
+        newline.push_back(f[Nindices[i]-1]);
+        xtn.push_back(newline);
+        newline.clear();
+    }
+    // obtendo B a partir dos indices básicos
+    cout << "\nBindices: \n" << endl;
+    for(int i = 0; i < Bindices.size(); i++){
+        cout << Bindices[i] << " ";
+    }
+    cout << "\nObtendo B: " << endl;
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < Bindices.size(); j++){
+            newline.push_back(A[i][Bindices[j]-1]);
+        }
+        B.push_back(newline);
+        newline.clear();
+    }
+    printMatrix(B);
+    // Inverso da matriz B
+    vector<vector<double>> BminusOne = invertMatrix(B);
+    cout << "\nInverso de B:\n";
+    printMatrix(BminusOne);
+    cout << "\nObtendo N: " << endl;
+    // obtendo N a partir dos indices não básicos
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < Nindices.size(); j++){
+            newline.push_back(A[i][Nindices[j]-1]);
+        }
+        N.push_back(newline);
+        newline.clear();
+    }
+    printMatrix(N);
+    iteracao++;
     if (haveOneMax) {
         cout << "O problema tem uma maximização" << endl;
-    } else {
-        cout << "O problema não têm uma max" << endl;
+        // Vai para a fase 1
+
+        //[INICIO DA ITERAÇÃO SIMPLEX - FASE 1]
+        
+        //Passo 1: cálculo da solução básica
+
+        for(int i = 0; i < N.size(); i++){
+            for(int j = 0; j < N[0].size(); j++){
+                xtn[i][j] = 0;
+            }
+        }
+
+        //vetor de solução básicas
+        xtb = basicSolution(BminusOne, b);
+
+        cout << "\nSolução básica: " << endl;
+        printMatrix(xtb);
+
+        //Passo 2: cálculo dos custos relativos
+        // Passo 2.1 vetor multiplicador simplex
+        vector<vector<double>> ctb_row;
+        ctb_row = columnToRow(ctb, 0, 3);
+        cout << "B: " << endl;
+        printMatrix(BminusOne);
+        cout << "Numero line size" << ctb_row.size() << endl;
+        cout << "Numero col size" << BminusOne[0].size() << endl;
+        vector<vector<double>> lambda = multiplyMatrices(ctb_row, BminusOne, ctb_row.size(), BminusOne[0].size());
+        //resultado esperado: -3/2, 0, -1/2
+
+        cout << "\n Vetor Multiplicador Simplex: " << endl;
+        printMatrix(lambda);
+
+        // Passo 2.2 Custos relativos
+        //Custos relativos:
+
+        vector<vector<double>> a = obtainPartition(A, Nindices);
+
+        
+        cout << "\n Os valores de a: " << endl;
+        printMatrix(a);
+
+        //vector<vector<double>> lambdaT;
+        for(int i = 0; i < lambda.size(); i++){
+            newline.push_back(lambda[i][0]);
+        }
+        lambdaT.push_back(newline);
+        newline.clear();
+        cout << "\nValor multiplicado: " << endl;
+        cout << "Multiplica: " << endl;
+        printMatrix(lambda);
+        cout << "por: ..." << endl;
+        for(int i = 0; i < a[0].size(); i++){
+            vector<vector<double>> a_aux;
+            vector<vector<double>> multiply_aux;
+            for(int j = 0; j < a.size(); j++){
+                newline.push_back(a[j][i]);
+                a_aux.push_back(newline);
+                newline.clear();
+            }
+            cout << "O valor de a aux: " << endl;
+            printMatrix(a_aux);
+            multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
+            cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
+            // printMatrix(c);
+            // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0]; 
+        }
+        
+        for(int i = 0; i < N.size(); i++){
+            c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
+        }
+
+        //Passo 2.3 Determinação da variável a entrar na base:
+        cout << "Determinação da variável a entrar na base:" << endl;
+
+        //Passo 3
+        //Passo 4
+        //Passo 5
+        //Passo 6
+        //Fim da iteração simplex - Fase 1
     }
-    cout << "A matriz A é: \n";
-    printMatrix(A);
-    printMatrix(b);
+    // Fase 2
+    cout << "O problema não tem uma max" << endl;
+    // Vai para a fase 2
+//    cout << "A matriz A é: \n";
+//    printMatrix(A);
+//    printMatrix(b);
     for (double iten : f) {
         cout << iten << " ";
     }
-    int n = 2; // tamanho dos Bindices
-    int m = 4; // tamanho dos Nindices
-    // n + m tem q ser o tamanho da linha da tabela
 
-    // vetor de indices básicos
-    vector<double> Bindices = {1, 4, 2};
+    //Passo 1: cálculo da solução básica
 
-    // vetor de indices não básicos
-    vector<double> Nindices = {3, 5};
+    for(int i = 0; i < N.size(); i++){
+        for(int j = 0; j < N[0].size(); j++){
+            xtn[i][j] = 0;
+        }
+    }
 
-    // com isso obtem-se as matrizes B e N
-    // são obtidas a partir das colunas de A nos indíces de Bindices e Nindices respectivamente
-    // depois eu faço isso kkk
-    vector<vector<double>> B = {{1, 0, 1}, {1, 1, -1}, {-1, 0, 1}}; 
-    
-    vector<vector<double>> N = {{1, 0}, {0, 0}, {0, 1}};
+    //vetor de solução básicas
+    xtb = basicSolution(BminusOne, b);
 
-    // Vetor das variáveis básicas
-    // b é novamente a posição dos indices do vetor Bindices
-    vector<vector<double>> c = {{-1}, {-2}, {0}, {0}, {0}};
-
-    // PERGUNTAR AO PROFESSOR SE É MELHOR FAZER SÓ UM VETOR
-    // OU SE PODE SER SEPARADO EM CTB E CTN
-
-    // --------------- FASE  1 ----------------
-    // iteração
-
-    // ---PASSO 1---
-    //cáculo da solução básica
-
-    //xb = x3, x4, x5
-    //xb = B^-1*b
-    //obtem-se:
-    // vector<double> xb = {6, 4, 4};
-
-    vector<vector<double>> BminusOne = invertMatrix(B);
-
-    vector<vector<double>> xb = basicSolution(BminusOne, b);
+    // cout << "\nInverso de B:\n";
+    // printMatrix(BminusOne);
+    // cout <<"\nMultiplicado por vetor b: \n";
+    // printMatrix(b);
 
     cout << "\nSolução básica: " << endl;
-    printMatrix(xb);
+    printMatrix(xtb);
 
-    // vector<vector<double>> xn = {{0}, {0}};
-
-    // ---PASSO 2---
-    //cáculo dos custos relativos
-
-    //vetor multiplicador simplex
-    //c^tB = (cB1 , cB2 , cB3 ) = (c3, c4, c5) = (-1, 0, -2).
-    vector<vector<double>> ctb;
-
-    vector<double> newline;
-
-    for(int i = 0; i < Bindices.size(); i++){
-        newline.push_back(c[Bindices[i] - 1][0]);
-        ctb.push_back(newline);
-        newline.clear();
-    }
-    cout << "\n Custos básicos: " << endl;
-    printMatrix(ctb);
-
-    cout << "\nAgora multiplica Custos Básicos: " << endl;
-    printMatrix(columnToRow(ctb, 0, 3));
-    // cout << "\nMatrix B: " << endl;
-    // B = obtainPartition(A, Bindices);
-    // printMatrix(B);
-    // cout << "\nPela matriz inversa de B: " << endl;
-    // BminusOne = invertMatrix(B);
-    // cout << "\n----------\n\n" << endl;
-    // printMatrix(BminusOne);
-
-    //Passo 2: {Cálculo dos custos relativos}
-    //2.1 vetor multiplicador simplex
+    //Passo 2: cálculo dos custos relativos
+    // Passo 2.1 vetor multiplicador simplex
     vector<vector<double>> ctb_row;
     ctb_row = columnToRow(ctb, 0, 3);
     cout << "B: " << endl;
@@ -424,7 +577,7 @@ int main() {
     cout << "\n Vetor Multiplicador Simplex: " << endl;
     printMatrix(lambda);
 
-    //2.2 Custos relativos
+    // Passo 2.2 Custos relativos
     //Custos relativos:
 
     vector<vector<double>> a = obtainPartition(A, Nindices);
@@ -433,7 +586,7 @@ int main() {
     cout << "\n Os valores de a: " << endl;
     printMatrix(a);
 
-    vector<vector<double>> lambdaT;
+    //vector<vector<double>> lambdaT;
     for(int i = 0; i < lambda.size(); i++){
         newline.push_back(lambda[i][0]);
     }
@@ -463,7 +616,48 @@ int main() {
         c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
     }
 
-    //2.3 Determinação da variável a entrar na base:
+    //Passo 2.3 Determinação da variável a entrar na base:
+    cout << "Determinação da variável a entrar na base:" << endl;
+
+    //Passo 3
+    //Passo 4
+    //Passo 5
+    //Passo 6
+
+// -------- A PARTIR DAQUI É SÓ ASNEIRA -------------------------
+
+    // n + m tem q ser o tamanho da linha da tabela
+
+    // com isso obtem-se as matrizes B e N
+    // são obtidas a partir das colunas de A nos indíces de Bindices e Nindices respectivamente
+    // depois eu faço isso kkk
+
+    // Vetor das variáveis básicas
+    // b é novamente a posição dos indices do vetor Bindices
+
+
+    // vector<vector<double>> xn = {{0}, {0}};
+
+    // ---PASSO 2---
+    //cáculo dos custos relativos
+ 
+    // for(int i = 0; i < Bindices.size(); i++){
+    //     newline.push_back(c[Bindices[i] - 1][0]);
+    //     ctb.push_back(newline);
+    //     newline.clear();
+    // }
+    // cout << "\n Custos básicos: " << endl;
+    // printMatrix(ctb);
+
+    // cout << "\nAgora multiplica Custos Básicos: " << endl;
+    // printMatrix(columnToRow(ctb, 0, 3));
+    // cout << "\nMatrix B: " << endl;
+    // B = obtainPartition(A, Bindices);
+    // printMatrix(B);
+    // cout << "\nPela matriz inversa de B: " << endl;
+    // BminusOne = invertMatrix(B);
+    // cout << "\n----------\n\n" << endl;
+    // printMatrix(BminusOne);
 
     bool hasSolution = false;
     bool min = N[0][0];
@@ -477,7 +671,7 @@ int main() {
     if(min > 0){
         hasSolution = true;
     }
-    printMatrix(xb);
+    //printMatrix(xb);
 
     return 0;
 }
