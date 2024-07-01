@@ -322,6 +322,7 @@ int main() {
     
    // matriz de Básicos
     vector<vector<double>> B; 
+    vector<vector<double>> A;
     // matriz de Não Básicos
     vector<vector<double>> N;
     vector<int> Bindices;
@@ -330,7 +331,9 @@ int main() {
     // Matriz de restrições
     vector<double> f;
     bool haveOneMax = false;
-    readInput(B, N, Bindices, Nindices, b, f, haveOneMax);
+    readInput(A, B, N, Bindices, Nindices, b, f, haveOneMax);
+    cout << "Matriz A:" << endl;
+    printMatrix(A);
     cout << "Matriz B: \n";
     printMatrix(B);
     cout << "Matriz N: \n";
