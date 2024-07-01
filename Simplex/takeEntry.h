@@ -6,8 +6,9 @@
 #include <algorithm>
 #include <iomanip>
 
-#define POSITIVE_SIGNAL true
-#define NEGATIVE_SIGNAL false
+#define POSITIVE_SIGNAL 1
+#define NEGATIVE_SIGNAL -1
+#define EQUAL_SIGNAL 0
 
 using namespace std;
 
@@ -110,8 +111,53 @@ vector<string> tokenizeExpression(string expression)
         tokens = split(newExpression, ';');
     return tokens;
 }
+vector<double> parser_goal(
+    string str,
+    int &max_index
+    ){
+    int i = 0;
+    size_t limitPosition = str.find("=");
+    string substr = "", b_value = "";
+    string aux = str.substr(0, limitPosition - 1);
+    if (aux.find("max") != string::npos || aux.find("Max") != string::npos || aux.find("Maximização") != string::npos || aux.find("Maximize") != string::npos)
+    {
+        isMaximization = true;
+    }
+    else if (aux.find("min") != string::npos || aux.find("Min") != string::npos || aux.find("Minimização") != string::npos || aux.find("Minimize") != string::npos)
+    {
+        isMaximization = false;
+    }
+    else {
+        cerr << "Formato Inválido: limit: " << limitPosition <<" Nenhuma palavra definindo operação encontrada em " << str.substr(0, limitPosition - 1) << endl;
+        return vector<double>();
+    }
+    substr = str.substr(limitPosition + 1);
+    vector<string> tokens = tokenizeExpression(substr);
+    int index;
+    double value;
+    vector<pair<double, int>> values;   // valores dos coeficientes
+    for (i = 0; i < tokens.size(); i++)
+    {
+        tokenParser(tokens[i], &index, value);
+        values.push_back(make_pair(value, index));
+        if (index > max_index)
+            max_index = index;
+    }
 
-vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &slack_value, bool is_expression = true)
+    vector<double> result(max_index, 0.0);
+    for (i = 0; i < values.size(); i++)
+    {
+        result[values[i].second - 1] = values[i].first;
+    }
+
+    return result;
+}
+
+vector<double> parser(
+    string str,
+    int &max_index,
+    vector<pair<double,bool>> &slack_value
+    )
 {
     int i = 0;
     size_t limitPosition;
@@ -119,8 +165,6 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
     bool haveInequantionSignal = false;
     bool oneSimbol = false;
     /**
-     * Verifica se a expressão é uma restrição ou a função objetivo
-     * Se for uma restrição, a expressão é do tipo: Max Z = 2x1 + 3x2 + 4x3 <= 5
      * Se for a função objetivo, a expressão é do tipo: 2x1 + 3x2 + 4x3
      * string::npos é o valor retornado quando a substring não é encontrada, ele funciona como um sentinela
      * 
@@ -128,16 +172,19 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
     if (str.find(">=") != string::npos || str.find(">") != string::npos)
     {
         limitPosition = str.find(">=");
+        haveOneBiggerThanZero = true;
+        haveInequantionSignal = true;
         if (limitPosition == string::npos)
         {
             limitPosition = str.find(">");
             if (limitPosition != string::npos)
             {
+                haveOneBiggerThanZero = true;
+                haveInequantionSignal = true;
                 oneSimbol = true;
             }
         }
-        haveInequantionSignal = true;
-        haveOneBiggerThanZero = true;
+        
     }
     else if (str.find("<=") != string::npos || str.find("<") != string::npos)
     {
@@ -154,31 +201,11 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
     }
     else if (str.find("=") != string::npos)
     {
-        if (is_expression)
-        {
-            haveOneBiggerThanZero = true;
-        }
         if (!oneSimbol)
         {
             limitPosition = str.find("=");
         }
-        if (!is_expression)
-        {
-            limitPosition = str.find("=");
-            string aux = str.substr(0, limitPosition - 1);
-            if (aux.find("max") != string::npos || aux.find("Max") != string::npos || aux.find("Maximização") != string::npos || aux.find("Maximize") != string::npos)
-            {
-                isMaximization = true;
-            }
-            else if (aux.find("min") != string::npos || aux.find("Min") != string::npos || aux.find("Minimização") != string::npos || aux.find("Minimize") != string::npos)
-            {
-                isMaximization = false;
-            }
-            else {
-                cerr << "Formato Inválido: limit: " << limitPosition <<" Nenhuma palavra definindo operação encontrada em " << str.substr(0, limitPosition - 1) << endl;
-                return vector<double>();
-            }
-        }
+        haveInequantionSignal = false;
     }
     else
     {
@@ -186,27 +213,27 @@ vector<double> parser(string str, int &max_index, vector<pair<double, bool>> &sl
         return vector<double>();
     }
     
-    if (haveInequantionSignal)
+    b_value = str.substr(limitPosition + 1);
+    if (!oneSimbol)
     {
-        b_value = str.substr(limitPosition + 1);
-        if (!oneSimbol)
-        {
-            b_value = str.substr(limitPosition + 2);
-        }
-        if (str.find(">=") != string::npos || str.find(">") != string::npos)
-            slack_value.push_back(make_pair(stod(b_value), POSITIVE_SIGNAL));
-        else
-            slack_value.push_back(make_pair(stod(b_value), NEGATIVE_SIGNAL));
+        b_value = str.substr(limitPosition + 2);
+    }
+    if (str.find(">=") != string::npos || str.find(">") != string::npos){
+        slack_value.push_back(make_pair(stod(b_value), POSITIVE_SIGNAL));
+    }
+    else if (str.find("<=") != string::npos || str.find("<") != string::npos){
+        slack_value.push_back(make_pair(stod(b_value), NEGATIVE_SIGNAL));
+    }
+    else if (str.find("=") != string::npos){
+        slack_value.push_back(make_pair(stod(b_value), EQUAL_SIGNAL));
+    }
+    else {
+        cerr << "Formato Inválido: Nenhum sinal de limite encontrado em " << str << endl;
+        return vector<double>();
     }
 
-    if (!is_expression)
-    {
-        substr = str.substr(limitPosition + 1);
-    }
-    else
-    {
-        substr = str.substr(0, limitPosition);
-    }
+    substr = str.substr(0, limitPosition);
+
 
     vector<string> tokens = tokenizeExpression(substr);
     int index;
@@ -248,7 +275,14 @@ FileContent readFile()
     return fileContent;
 }
 
-void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, vector<pair<double, bool>> &slack_variables, int &max_index, vector<double> &goal, bool &haveOneBiggerThanZero)
+void addSlackVariables(
+vector<vector<double>> &expressions,
+vector<double> &b,
+vector<vector<double>> &N,
+vector<pair<double, bool>> &slack_variables,
+int &max_index, vector<double> &goal,
+bool &haveOneBiggerThanZero
+)
  {
     vector<vector<double>> aux_expression(expressions.size(), vector<double>(slack_variables.size(), 0.0));
     int i;
@@ -259,18 +293,24 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
             aux_expression[i][i] = -1.0;
             haveOneBiggerThanZero = true;
         }
-        else
+        else if (slack_variables[i].second == NEGATIVE_SIGNAL)
         {
             aux_expression[i][i] = 1.0;
         }
+        else
+        {
+            aux_expression[i][i] = 0.0;
+            haveOneBiggerThanZero = true;
+        }
         b.push_back(slack_variables[i].first); 
+        N.push_back(aux_expression[i]);
         // Se no vetor b algum índice for menor que 0, então multiplique toda a restrição por (-1) e inverta o sentido da desigualdade   
         expressions[i].insert(expressions[i].end(), aux_expression[i].begin(), aux_expression[i].end());
         if (slack_variables[i].first < 0)
         {
-            for (int j = 0; j < expressions[i].size(); j++)
+            for (int j = 0; j < N[i].size(); j++)
             {
-                expressions[i][j] *= -1;
+                N[i][j] *= -1;
             }
             b[i] *= -1;
         }
@@ -289,26 +329,58 @@ void addSlackVariables(vector<vector<double>> &expressions, vector<double> &b, v
 
 FileContent fileContent = readFile();
 
-void readInput(vector<vector<double>> &expressions, vector<vector<double>> &b, vector<double> &goal, bool &haveOneBiggerThanZero)
+void readInput(
+    vector<vector<double>> &expressions,
+    vector<vector<double>> &B,
+    vector<vector<double>> &N,
+    vector<int> &B_index,
+    vector<int> &N_index,
+    vector<vector<double>> &b,
+    vector<double> &goal,
+    bool &haveOneBiggerThanZero)
 {
-    cout << "Dentro da função readInput" << endl;
     int max_index = 0;
     vector<pair<double, bool>> slack_variables;
-    goal = parser(fileContent.goal, max_index, slack_variables, false);
+    goal = parser_goal(fileContent.goal, max_index);
     cout << endl;
     int limit_index = max_index;
-    expressions.clear();
     for (int i = 0; i < fileContent.expressions.size(); i++)
     {
-        expressions.push_back(parser(fileContent.expressions[i], max_index, slack_variables, true));
+        expressions.push_back(parser(fileContent.expressions[i], max_index, slack_variables));
     }
+    B.clear();
+    N.clear();
+    B = expressions;
     b.push_back(vector<double>());
-    addSlackVariables(expressions, b[0], slack_variables, limit_index, goal, haveOneBiggerThanZero);
+    for (int i = 1; i <= goal.size(); i++)
+    {
+        B_index.push_back(i);
+    }
+    addSlackVariables(expressions, b[0], N, slack_variables, limit_index, goal, haveOneBiggerThanZero);
     vector<vector<double>> aux(b[0].size(), vector<double>(1, 0.0));
+    // Cria um vetor com os índices das variáveis não básicas
     for (int i = 0; i < b[0].size(); i++)
     {
         aux[i][0] = b[0][i];
     }
     b.clear();
     b = aux;
+    // Cria um vetor com os índices das variáveis básicas
+    for (int i = B_index.size()+1; i <= goal.size(); i++)
+    {
+        N_index.push_back(i);
+    }
+    // Troca colunas se necessário
+    int i = 0, j = 0;
+    while (B_index.size() < B.size())
+    {
+        B_index.push_back(N_index[i]);
+        N_index.erase(N_index.begin());
+        for (j = 0; j < N.size(); j++)
+        {
+            B[j].push_back(N[j][i]);
+            N[j].erase(N[j].begin(), N[j].begin() + 1);
+        }
+        i++;
+    }
 }
