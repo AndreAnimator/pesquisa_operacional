@@ -47,8 +47,6 @@ void switchLines(vector<vector<double>>& matrix, int x_line, int y_line)
 {
     double aux;
 
-    cout << endl << "Tamanho da linha a ser trocada: " << matrix[0].size() << endl;
-
     for (int i = 0; i < matrix[0].size(); i++)
     {
         aux = matrix[x_line][i];
@@ -90,7 +88,7 @@ double calcDeterminant(vector<vector<double>> matrix, int order) {
         determinant *= matrix[i][i];
     }
 
-    cout << endl << "DETERMINANTEEEE " << determinant << endl;
+    //cout << endl << "DETERMINANTE:  " << determinant << endl;
     return determinant;
 }
 
@@ -196,7 +194,6 @@ int gaussJordanElimination(vector<vector<double>>& matrix, int order)
                 }
             }
         }
-        printMatrix(matrix);
         cout << endl;
     }
 
@@ -296,7 +293,7 @@ vector<vector<double>> columnToRow(vector<vector<double>> column, int column_ind
     return row;
 }
 
-vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> indexes){
+vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<int> indexes){
     vector<double> newline;
     vector<vector<double>> row;
 
@@ -314,29 +311,41 @@ vector<vector<double>> obtainPartition(vector<vector<double>> A, vector<double> 
 int main() {
 
     setlocale(LC_ALL, "Portuguese");
-    
     printf("\nComeça aqui o método simplex\n");
-
     // Variáveis auxiliares
-
     vector<double> newline;
-    
 
     // --------------- pré FASE  1 ----------------
 
     // Dados do problema
     cout <<"Dados do problema: \n" << endl;
-    vector<vector<double>> b;
+    
+   // matriz de Básicos
+    vector<vector<double>> B; 
     vector<vector<double>> A;
+    // matriz de Não Básicos
+    vector<vector<double>> N;
+    vector<int> Bindices;
+    vector<int> Nindices;
+    vector<vector<double>> b;
+    // Matriz de restrições
     vector<double> f;
     bool haveOneMax = false;
-    cout << "ANTES DE LER\n";
-    readInput(A, b, f, haveOneMax);
-
-    cout << "DEPOIS DE LER\n";
-    
-    cout << "Matriz A: \n";
+    readInput(A, B, N, Bindices, Nindices, b, f, haveOneMax);
+    cout << "Matriz A:" << endl;
     printMatrix(A);
+    cout << "Matriz B: \n";
+    printMatrix(B);
+    cout << "Matriz N: \n";
+    printMatrix(N);
+    cout << "Indices de B: \n";
+    for(int i = 0; i < Bindices.size(); i++){
+        cout << Bindices[i] << " ";
+    }
+    cout << "\nIndices de N: \n";
+    for(int i = 0; i < Nindices.size(); i++){
+        cout << Nindices[i] << " ";
+    }
     cout << "\nMatriz b: \n";
     printMatrix(b);
     cout << "\nFunção f: \n";
@@ -345,6 +354,7 @@ int main() {
     }
 
     int iteracao = 0;
+    
     // vetor de custos
     vector<vector<double>> x;
     // vetores de variáveis básicas
@@ -352,16 +362,6 @@ int main() {
     // vetores de variáveis não-básicas:
     vector<vector<double>> xtn;
     // vetor de indices não básicos
-    vector<double> Nindices;
-    // vetor de indices básicos
-    vector<double> Bindices;
-
-   // matriz de Básicos
-    vector<vector<double>> B; 
-    
-    // matriz de Não Básicos
-    vector<vector<double>> N;
-
     // vetor de custos:
     vector<vector<double>> c;
     for(int i = 0; i < f.size(); i++){
@@ -369,12 +369,11 @@ int main() {
         c.push_back(newline);
         newline.clear();
     }
-    cout << "Vetor de custos:\n";
+    cout << "\nVetor de custos:\n";
     printMatrix(c);
-
+    
     // custos básicos:
     vector<vector<double>> ctb;
-
     // custos não básicos:
     vector<vector<double>> ctn;
 
@@ -387,17 +386,17 @@ int main() {
     // [FORMULAÇÃO DO PROBLEMA ARTIFICIAL]
 
     // m número de restrições do problema
-    int m = A.size();
-    cout << "\nNúmero de restrições: \n" << m << endl;
-    // n número de variáveis do problema
-    int n = f.size() - m;
-    cout << "\nNúmero de variáveis: \n" << n << endl;
+    int m = B.size();
+    cout << "Número de restrições: \n" << m << endl;
+    // n número de variáveis do problema ou N.size()
+    int n = f.size();
+    cout << "Número de variáveis: \n" << n << endl;
     // Função objetivo
-    double minf = 0;
-    for(int i = n; i < n + m; i++){
-        minf += f[i];
-    }
-    cout << "\nFunção objetivo: " << minf << endl;
+    // double minf = 0;
+    // for(int i = n; i < n + m; i++){
+    //     minf += f[i];
+    // }
+    // cout << "\nFunção objetivo: " << minf << endl;
     // Restrições
     // Para cada restrição j = 1,..., m incluir uma variavel xn+j.
     for(int i = 0; i < n + m; i++){
@@ -405,13 +404,7 @@ int main() {
         x.push_back(newline);
         newline.clear();
     }
-    // Partição Básica inicial:
-    for(int i = n + 1; i <= n + m; i++){
-        Nindices.push_back(i);
-    }
-    for(int i = 1; i <= n; i++){
-        Bindices.push_back(i);
-    }
+    
     // vetores de variáveis básicas e não-básicas:
     for(int i = 0; i < Bindices.size(); i++){
         newline.push_back(f[Bindices[i]-1]);
@@ -429,35 +422,12 @@ int main() {
     }
     ctb.push_back(newline);
     newline.clear();
-    // obtendo B a partir dos indices básicos
-    cout << "\nBindices: \n" << endl;
-    for(int i = 0; i < Bindices.size(); i++){
-        cout << Bindices[i] << " ";
-    }
-    cout << "\nObtendo B: " << endl;
-    for(int i = 0; i < A.size(); i++){
-        for(int j = 0; j < Bindices.size(); j++){
-            newline.push_back(A[i][Bindices[j]-1]);
-        }
-        B.push_back(newline);
-        newline.clear();
-    }
-    printMatrix(B);
     // Inverso da matriz B
     vector<vector<double>> BminusOne = invertMatrix(B);
     cout << "\nInverso de B:\n";
     printMatrix(BminusOne);
-    cout << "\nObtendo N: " << endl;
-    // obtendo N a partir dos indices não básicos
-    for(int i = 0; i < A.size(); i++){
-        for(int j = 0; j < Nindices.size(); j++){
-            newline.push_back(A[i][Nindices[j]-1]);
-        }
-        N.push_back(newline);
-        newline.clear();
-    }
-    printMatrix(N);
     iteracao++;
+    
     if (haveOneMax) {
         cout << "O problema tem uma maximização" << endl;
         // Vai para a fase 1
@@ -482,7 +452,7 @@ int main() {
         // Passo 2.1 vetor multiplicador simplex
         vector<vector<double>> ctb_row;
         ctb_row = columnToRow(ctb, 0, 3);
-        cout << "B: " << endl;
+        cout << "B-1: " << endl;
         printMatrix(BminusOne);
         cout << "Numero line size" << ctb_row.size() << endl;
         cout << "Numero col size" << BminusOne[0].size() << endl;
@@ -495,7 +465,7 @@ int main() {
         // Passo 2.2 Custos relativos
         //Custos relativos:
 
-        vector<vector<double>> a = obtainPartition(A, Nindices);
+        vector<vector<double>> a = obtainPartition(N, Nindices);
 
         
         cout << "\n Os valores de a: " << endl;
@@ -589,7 +559,7 @@ int main() {
     // Passo 2.2 Custos relativos
     //Custos relativos:
 
-    vector<vector<double>> a = obtainPartition(A, Nindices);
+    vector<vector<double>> a = obtainPartition(N, Nindices);
 
     
     cout << "\n Os valores de a: " << endl;
@@ -683,4 +653,5 @@ int main() {
     //printMatrix(xb);
 
     return 0;
+    
 }
