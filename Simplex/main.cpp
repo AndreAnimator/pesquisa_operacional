@@ -423,6 +423,12 @@ int main() {
         xtn.push_back(newline);
         newline.clear();
     }
+    // custos básicos
+    for(int i = 0; i < Bindices.size(); i++){
+        newline.push_back(f[Bindices[i]-1]);
+    }
+    ctb.push_back(newline);
+    newline.clear();
     // obtendo B a partir dos indices básicos
     cout << "\nBindices: \n" << endl;
     for(int i = 0; i < Bindices.size(); i++){
@@ -544,6 +550,7 @@ int main() {
         cout << iten << " ";
     }
 
+    cout << "\nPara aqui?" << endl;
     //Passo 1: cálculo da solução básica
 
     for(int i = 0; i < N.size(); i++){
@@ -561,17 +568,19 @@ int main() {
     // printMatrix(b);
 
     cout << "\nSolução básica: " << endl;
+    cout << "\nPara aqui?" << endl;
     printMatrix(xtb);
+    cout << "\nPara aqui?" << endl;
 
     //Passo 2: cálculo dos custos relativos
     // Passo 2.1 vetor multiplicador simplex
     vector<vector<double>> ctb_row;
-    ctb_row = columnToRow(ctb, 0, 3);
+    // ctb_row = columnToRow(ctb, 0, 1); // pqq vira row?
     cout << "B: " << endl;
     printMatrix(BminusOne);
     cout << "Numero line size" << ctb_row.size() << endl;
     cout << "Numero col size" << BminusOne[0].size() << endl;
-    vector<vector<double>> lambda = multiplyMatrices(ctb_row, BminusOne, ctb_row.size(), BminusOne[0].size());
+    vector<vector<double>> lambda = multiplyMatrices(ctb, BminusOne, ctb.size(), BminusOne[0].size());
     //resultado esperado: -3/2, 0, -1/2
 
     cout << "\n Vetor Multiplicador Simplex: " << endl;
