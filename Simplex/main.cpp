@@ -434,6 +434,7 @@ int main() {
 
         //[INICIO DA ITERAÇÃO SIMPLEX - FASE 1]
         
+        cout << "\nPara aqui?" << endl;
         //Passo 1: cálculo da solução básica
 
         for(int i = 0; i < N.size(); i++){
@@ -443,20 +444,27 @@ int main() {
         }
 
         //vetor de solução básicas
-        xtb = basicSolution(BminusOne, b);
+        xtb = multiplyMatrices(BminusOne, b, BminusOne.size(), b[0].size());
+
+        // cout << "\nInverso de B:\n";
+        // printMatrix(BminusOne);
+        // cout <<"\nMultiplicado por vetor b: \n";
+        // printMatrix(b);
 
         cout << "\nSolução básica: " << endl;
+        cout << "\nPara aqui?" << endl;
         printMatrix(xtb);
+        cout << "\nPara aqui?" << endl;
 
         //Passo 2: cálculo dos custos relativos
         // Passo 2.1 vetor multiplicador simplex
         vector<vector<double>> ctb_row;
-        ctb_row = columnToRow(ctb, 0, 3);
-        cout << "B-1: " << endl;
+        // ctb_row = columnToRow(ctb, 0, 1); // pqq vira row?
+        cout << "B: " << endl;
         printMatrix(BminusOne);
         cout << "Numero line size" << ctb_row.size() << endl;
         cout << "Numero col size" << BminusOne[0].size() << endl;
-        vector<vector<double>> lambda = multiplyMatrices(ctb_row, BminusOne, ctb_row.size(), BminusOne[0].size());
+        vector<vector<double>> lambda = multiplyMatrices(ctb, BminusOne, ctb.size(), BminusOne[0].size());
         //resultado esperado: -3/2, 0, -1/2
 
         cout << "\n Vetor Multiplicador Simplex: " << endl;
@@ -481,6 +489,7 @@ int main() {
         cout << "Multiplica: " << endl;
         printMatrix(lambda);
         cout << "por: ..." << endl;
+        vector<vector<double>> reduced_costs = c;
         for(int i = 0; i < a[0].size(); i++){
             vector<vector<double>> a_aux;
             vector<vector<double>> multiply_aux;
@@ -494,21 +503,47 @@ int main() {
             multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
             cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
             // printMatrix(c);
-            // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0]; 
+            // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0];
+            //for(int i = 0; i < N.size(); i++){
+            reduced_costs[Nindices[i]-1][0] = c[Nindices[i]-1][0] - multiply_aux[0][0];
+            //}
         }
-        
-        for(int i = 0; i < N.size(); i++){
-            c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
-        }
+
+        cout << "Custos reduzidos: " << endl;
+        printMatrix(reduced_costs);
 
         //Passo 2.3 Determinação da variável a entrar na base:
         cout << "Determinação da variável a entrar na base:" << endl;
 
-        //Passo 3
-        //Passo 4
-        //Passo 5
-        //Passo 6
-        //Fim da iteração simplex - Fase 1
+        bool hasSolution = false;
+        bool min = N[0][0];
+
+        for(int i; i < N[0].size(); i++){
+            if(N[0][i] < min)
+                min = N[0][i];
+        }
+
+        cout << "Valor mínimo é " << min << endl;
+        if(min > 0){
+            hasSolution = true;
+        }
+
+        //Passo 3: teste de otimalidade
+        //Se cnk >= 0
+        //Se ainda há variáveis artificiais na base => pare
+        //Senão, Fase II
+        //Passo 4: cálculo da direção simplex
+        // y <- B-1ank
+        //Passo 5: Determinação do passo e variável a sair da base
+        //se y <= 0, então: pare {problema não tem solução ótima finita}
+        //caso contrário, determine a variável a sair da base pela razão mínima:
+        //ê <- XBl/yl = min{xbi/yi, tal que yi > 0, i = 1, 2, ..., m} (a variável xbl sai da base)
+        //Passo 6: atualização nova partição básica, troque a l-éesima coluna de B pela k-ésima coluna de N
+        //matriz básica nova: B <- [aB1 ... aBl-1 aNk abl+1 ... aBm]
+        //matriz não básica nova: N <- [aN1 ... aNk-1 aBl aNk+1 ...aNn]
+        //se ainda há variáveis artificiais na base => Retorne ao passo 1
+        //senão => Fase II
+        //iteração++
     }
     // Fase 2
     cout << "O problema não tem uma max" << endl;
@@ -575,6 +610,7 @@ int main() {
     cout << "Multiplica: " << endl;
     printMatrix(lambda);
     cout << "por: ..." << endl;
+    vector<vector<double>> reduced_costs = c;
     for(int i = 0; i < a[0].size(); i++){
         vector<vector<double>> a_aux;
         vector<vector<double>> multiply_aux;
@@ -588,20 +624,62 @@ int main() {
         multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
         cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
         // printMatrix(c);
-        // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0]; 
+        // c[Nindices[i] - 1][0] = c[Nindices[i] - 1][0];
+        //for(int i = 0; i < N.size(); i++){
+        reduced_costs[Nindices[i]-1][0] = c[Nindices[i]-1][0] - multiply_aux[0][0];
+        //}
     }
-    
-    for(int i = 0; i < N.size(); i++){
-        c[Nindices[i]-1][0] = c[Nindices[i]-1][0];
-    }
+
+    cout << "Custos reduzidos: " << endl;
+    printMatrix(reduced_costs);
 
     //Passo 2.3 Determinação da variável a entrar na base:
     cout << "Determinação da variável a entrar na base:" << endl;
 
-    //Passo 3
-    //Passo 4
-    //Passo 5
-    //Passo 6
+    bool hasSolution = false;
+    bool min = N[0][0];
+
+    for(int i; i < N[0].size(); i++){
+        if(N[0][i] < min)
+            min = N[0][i];
+    }
+
+    cout << "Valor mínimo é " << min << endl;
+    if(min > 0){
+        hasSolution = true;
+    }
+
+    //Passo 3: teste de otimalidade
+    //Se cnk >= 0
+    //Se ainda há variáveis artificiais na base => pare
+    //Senão, Fase II
+    //Passo 4: cálculo da direção simplex
+    // y <- B-1ank
+    //Passo 5: Determinação do passo e variável a sair da base
+    //se y <= 0, então: pare {problema não tem solução ótima finita}
+    //caso contrário, determine a variável a sair da base pela razão mínima:
+    //ê <- XBl/yl = min{xbi/yi, tal que yi > 0, i = 1, 2, ..., m} (a variável xbl sai da base)
+    //Passo 6: atualização nova partição básica, troque a l-éesima coluna de B pela k-ésima coluna de N
+    //matriz básica nova: B <- [aB1 ... aBl-1 aNk abl+1 ... aBm]
+    //matriz não básica nova: N <- [aN1 ... aNk-1 aBl aNk+1 ...aNn]
+    //se ainda há variáveis artificiais na base => Retorne ao passo 1
+    //senão => Fase II
+    //iteração++
+
+    //Fase II
+
+    //Passo 1 cálculo da solução básica
+    //Passo 2 cálculo dos custos relativos
+    //2.1 vetor multiplicador simplex
+    //2.2 custos relativos
+    //2.3 determinação da variável a entrar na base
+    //Passo 3 teste de otimalidade
+    //se cnk >= 0 então, pare, solução ótima
+    //Passo 4 calculo da direção simplex
+    //Passo 5 determinação do passo e variável a sair  da base
+    //Passo 6 atualização: nova partição básica, troque a l-ésima coluna de B pela k-ésima coluna de N
+    //iteração++
+    //Solução ótima: S = para todo i = 1, ..., n, cixi
 
 // -------- A PARTIR DAQUI É SÓ ASNEIRA -------------------------
 
@@ -638,18 +716,6 @@ int main() {
     // cout << "\n----------\n\n" << endl;
     // printMatrix(BminusOne);
 
-    bool hasSolution = false;
-    bool min = N[0][0];
-
-    for(int i; i < N[0].size(); i++){
-        if(N[0][i] < min)
-            min = N[0][i];
-    }
-
-    cout << "Valor mínimo é " << min << endl;
-    if(min > 0){
-        hasSolution = true;
-    }
     //printMatrix(xb);
 
     return 0;
