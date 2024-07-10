@@ -364,7 +364,7 @@ int main()
     vector<vector<double>> b; // Matriz de restrições
     vector<double> f;         // Função objetivo
     bool haveOneMax = false;
-    readInput(A, B, N, Bindices, Nindices, b, f, haveOneMax);
+    readInput(A, N, B, Bindices, Nindices, b, f, haveOneMax);
     cout << "Matriz A:" << endl;
     printMatrix(A);
     cout << "Matriz B: \n";
@@ -433,12 +433,24 @@ int main()
         newline.clear();
     }
     // custos básicos
+    for (int i = 0; i < Nindices.size(); i++)
+    {
+        newline.push_back(f[Nindices[i] - 1]);
+    }
+    ctb.push_back(newline);
+    newline.clear();
+    // custos não básicos
     for (int i = 0; i < Bindices.size(); i++)
     {
         newline.push_back(f[Bindices[i] - 1]);
     }
-    ctb.push_back(newline);
+    ctn.push_back(newline);
     newline.clear();
+
+    printf("\nCustos básicos:\n");
+    printMatrix(ctb);
+    printf("\nCustos não básicos:\n");
+    printMatrix(ctn);
 
     vector<vector<double>> BminusOne = invertMatrix(B); // Inverso da matriz B
     cout << "\nInverso de B:\n";
@@ -450,7 +462,7 @@ int main()
     cout << "\n Vetor Multiplicador Simplex: " << endl;
     printMatrix(lambda);
 
-    vector<vector<double>> a = obtainPartition(N, Nindices);
+    vector<vector<double>> a = obtainPartition(A, Nindices);
 
     cout << "\n Os valores de a: " << endl;
     printMatrix(a);
@@ -476,6 +488,8 @@ int main()
     cout << "Custos reduzidos: " << endl;
     printMatrix(reduced_costs);
 
+    //IN PROGRESS: TESTE DE OTIMALIDADE FASE I
+
     bool hasNegative = false;
     for (int i = 0; i < reduced_costs.size(); i++)
     {
@@ -484,116 +498,131 @@ int main()
             hasNegative = true;
         }
     }
+    vector<vector<double>> solution(xtb.size(), vector<double>(xtb[0].size(), 0.0));
+    for(int i = 0; i < xtb.size(); i++){
+        for(int j = 0; j < xtb[0].size(); j++)
+            solution[i][j] = xtb[i][j];
+    }
+    vector<vector<double>> optimal(1, vector<double>(1, 0.0));
+    for(int i = 0; i < xtb.size(); i++){
+        for(int j = 0; j < xtb[0].size(); j++)
+            optimal[0][0] += c[i][j] * xtb[i][j];
+    }
     vector<vector<double>> y = multiplyMatrices(BminusOne, a, BminusOne.size(), a[0].size()); // Fase 2
 
-// Fase 2
+    printf("\nSolucao basica: \n");
+    printMatrix(solution);
+    printf("\nOptimal: \n");
+    printMatrix(optimal);
 
-// Vai para a fase 2
-//    cout << "A matriz A é: \n";
-//    printMatrix(A);
-//    printMatrix(b);
-for (double iten : f)
-{
-        cout << iten << " ";
-}
+    // Fase 2
 
-cout << "\nPara aqui?" << endl;
-// Passo 1: cálculo da solução básica
+    // Vai para a fase 2
+    //    cout << "A matriz A é: \n";
+    //    printMatrix(A);
+    //    printMatrix(b);
+    for (double iten : f)
+    {
+            cout << iten << " ";
+    }
 
-for (int i = 0; i < N.size(); i++)
-{
-        for (int j = 0; j < N[0].size(); j++)
-        {
-            xtn[i][j] = 0;
-        }
-}
+    cout << "\nPara aqui?" << endl;
+    // Passo 1: cálculo da solução básica
 
-// vetor de solução básicas
-xtb = basicSolution(BminusOne, b);
+    for (int i = 0; i < N.size(); i++)
+    {
+            for (int j = 0; j < N[0].size(); j++)
+            {
+                xtn[i][j] = 0;
+            }
+    }
 
-// cout << "\nInverso de B:\n";
-// printMatrix(BminusOne);
-// cout <<"\nMultiplicado por vetor b: \n";
-// printMatrix(b);
+    // vetor de solução básicas
+    xtb = basicSolution(BminusOne, b);
 
-cout << "\nSolução básica: " << endl;
-cout << "\nPara aqui?" << endl;
-printMatrix(xtb);
-cout << "\nPara aqui?" << endl;
+    // cout << "\nInverso de B:\n";
+    // printMatrix(BminusOne);
+    // cout <<"\nMultiplicado por vetor b: \n";
+    // printMatrix(b);
 
-// Passo 2: cálculo dos custos relativos
-//  Passo 2.1 vetor multiplicador simplex
-vector<vector<double>> ctb_row;
-// ctb_row = columnToRow(ctb, 0, 1); // pqq vira row?
-cout << "B: " << endl;
-printMatrix(BminusOne);
-cout << "Numero line size" << ctb_row.size() << endl;
-cout << "Numero col size" << BminusOne[0].size() << endl;
+    cout << "\nSolução básica: " << endl;
+    cout << "\nPara aqui?" << endl;
+    printMatrix(xtb);
+    cout << "\nPara aqui?" << endl;
 
-// Passo 2.2 Custos relativos
-// Custos relativos:
+    // Passo 2: cálculo dos custos relativos
+    //  Passo 2.1 vetor multiplicador simplex
+    vector<vector<double>> ctb_row;
+    // ctb_row = columnToRow(ctb, 0, 1); // pqq vira row?
+    cout << "B: " << endl;
+    printMatrix(BminusOne);
+    cout << "Numero line size" << ctb_row.size() << endl;
+    cout << "Numero col size" << BminusOne[0].size() << endl;
 
-// vector<vector<double>> lambdaT;
-for (int i = 0; i < lambda.size(); i++)
-{
-        newline.push_back(lambda[i][0]);
-}
-lambdaT.push_back(newline);
-newline.clear();
-cout << "\nValor multiplicado: " << endl;
-cout << "Multiplica: " << endl;
-printMatrix(lambda);
-cout << "por: ..." << endl;
+    // Passo 2.2 Custos relativos
+    // Custos relativos:
 
-// Passo 2.3 Determinação da variável a entrar na base:
-cout << "Determinação da variável a entrar na base:" << endl;
+    // vector<vector<double>> lambdaT;
+    for (int i = 0; i < lambda.size(); i++)
+    {
+            newline.push_back(lambda[i][0]);
+    }
+    lambdaT.push_back(newline);
+    newline.clear();
+    cout << "\nValor multiplicado: " << endl;
+    cout << "Multiplica: " << endl;
+    printMatrix(lambda);
+    cout << "por: ..." << endl;
 
-bool hasSolution = false;
-bool min = N[0][0];
+    // Passo 2.3 Determinação da variável a entrar na base:
+    cout << "Determinação da variável a entrar na base:" << endl;
 
-for (int i = 1; i < N[0].size(); i++)
-{
-        if (N[0][i] < min)
-            min = N[0][i];
-}
+    bool hasSolution = false;
+    bool min = N[0][0];
 
-cout << "Valor mínimo é " << min << endl;
-if (min > 0)
-{
+    for (int i = 1; i < N[0].size(); i++)
+    {
+            if (N[0][i] < min)
+                min = N[0][i];
+    }
+
+    cout << "Valor mínimo é " << min << endl;
+    if (min > 0)
+    {
         hasSolution = true;
-}
+    }
 
-// Passo 3: teste de otimalidade
-// Se cnk >= 0
-// Se ainda há variáveis artificiais na base => pare
-// Senão, Fase II
-// Passo 4: cálculo da direção simplex
-//  y <- B-1ank
-// Passo 5: Determinação do passo e variável a sair da base
-// se y <= 0, então: pare {problema não tem solução ótima finita}
-// caso contrário, determine a variável a sair da base pela razão mínima:
-// ê <- XBl/yl = min{xbi/yi, tal que yi > 0, i = 1, 2, ..., m} (a variável xbl sai da base)
-// Passo 6: atualização nova partição básica, troque a l-éesima coluna de B pela k-ésima coluna de N
-// matriz básica nova: B <- [aB1 ... aBl-1 aNk abl+1 ... aBm]
-// matriz não básica nova: N <- [aN1 ... aNk-1 aBl aNk+1 ...aNn]
-// se ainda há variáveis artificiais na base => Retorne ao passo 1
-// senão => Fase II
-// iteração++
+    // Passo 3: teste de otimalidade
+    // Se cnk >= 0
+    // Se ainda há variáveis artificiais na base => pare
+    // Senão, Fase II
+    // Passo 4: cálculo da direção simplex
+    //  y <- B-1ank
+    // Passo 5: Determinação do passo e variável a sair da base
+    // se y <= 0, então: pare {problema não tem solução ótima finita}
+    // caso contrário, determine a variável a sair da base pela razão mínima:
+    // ê <- XBl/yl = min{xbi/yi, tal que yi > 0, i = 1, 2, ..., m} (a variável xbl sai da base)
+    // Passo 6: atualização nova partição básica, troque a l-éesima coluna de B pela k-ésima coluna de N
+    // matriz básica nova: B <- [aB1 ... aBl-1 aNk abl+1 ... aBm]
+    // matriz não básica nova: N <- [aN1 ... aNk-1 aBl aNk+1 ...aNn]
+    // se ainda há variáveis artificiais na base => Retorne ao passo 1
+    // senão => Fase II
+    // iteração++
 
-// Fase II
+    // Fase II
 
-// Passo 1 cálculo da solução básica
-// Passo 2 cálculo dos custos relativos
-// 2.1 vetor multiplicador simplex
-// 2.2 custos relativos
-// 2.3 determinação da variável a entrar na base
-// Passo 3 teste de otimalidade
-// se cnk >= 0 então, pare, solução ótima
-// Passo 4 calculo da direção simplex
-// Passo 5 determinação do passo e variável a sair  da base
-// Passo 6 atualização: nova partição básica, troque a l-ésima coluna de B pela k-ésima coluna de N
-// iteração++
-// Solução ótima: S = para todo i = 1, ..., n, cixi
+    // Passo 1 cálculo da solução básica
+    // Passo 2 cálculo dos custos relativos
+    // 2.1 vetor multiplicador simplex
+    // 2.2 custos relativos
+    // 2.3 determinação da variável a entrar na base
+    // Passo 3 teste de otimalidade
+    // se cnk >= 0 então, pare, solução ótima
+    // Passo 4 calculo da direção simplex
+    // Passo 5 determinação do passo e variável a sair  da base
+    // Passo 6 atualização: nova partição básica, troque a l-ésima coluna de B pela k-ésima coluna de N
+    // iteração++
+    // Solução ótima: S = para todo i = 1, ..., n, cixi
 
-return 0;
+    return 0;
 }
