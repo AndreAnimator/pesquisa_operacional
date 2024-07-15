@@ -456,8 +456,14 @@ int main()
     cout << "\nInverso de B:\n";
     printMatrix(BminusOne);
     iteracao++;
+    
     // while (true)
     // {
+    vector<vector<double>> solution(xtb.size(), vector<double>(xtb[0].size(), 0.0));
+    for(int i = 0; i < xtb.size(); i++){
+        for(int j = 0; j < xtb[0].size(); j++)
+            solution[i][j] = xtb[i][j];
+    }
     vector<vector<double>> lambda = multiplyMatrices(ctb, BminusOne, ctb.size(), BminusOne[0].size());
     cout << "\n Vetor Multiplicador Simplex: " << endl;
     printMatrix(lambda);
@@ -498,16 +504,6 @@ int main()
             hasNegative = true;
         }
     }
-    vector<vector<double>> solution(xtb.size(), vector<double>(xtb[0].size(), 0.0));
-    for(int i = 0; i < xtb.size(); i++){
-        for(int j = 0; j < xtb[0].size(); j++)
-            solution[i][j] = xtb[i][j];
-    }
-    vector<vector<double>> optimal(1, vector<double>(1, 0.0));
-    for(int i = 0; i < xtb.size(); i++){
-        for(int j = 0; j < xtb[0].size(); j++)
-            optimal[0][0] += c[i][j] * xtb[i][j];
-    }
 
     bool hasSolution = false;
     double min = N[0][0];
@@ -517,7 +513,7 @@ int main()
     {
             if (N[0][i] < min){
                 min = N[0][i];
-                min_indice = i;
+                min_indice = Nindices[i];
             }
     }
 
@@ -528,29 +524,33 @@ int main()
     }
 
     vector<vector<double>> y = multiplyMatrices(BminusOne, a, BminusOne.size(), a[0].size()); // Fase 2
-
-    printf("\nSolucao basica: \n");
-    printMatrix(solution);
-    printf("\nOptimal: \n");
-    printMatrix(optimal);
     printf("y:\n");
     printMatrix(y);
     double e_chapeu = 10000;
     int e_chapeu_indice = 0;
-    for (int i = 0; i < m; i++){
+    for (int i = 0; i < xtb[0].size(); i++){
         double divisor = y[0][i];
         double dividendo = xtb[0][i];
+        cout << "\n//Dividendo: " << xtb[0][i] << endl;
+        cout << "\nDivisor: " << y[0][i] << endl;
         if(divisor > 0 && dividendo/divisor < e_chapeu){
-            e_chapeu_indice = i;
-            e_chapeu= dividendo/divisor;
+            e_chapeu_indice = i+1;
+            e_chapeu = dividendo/divisor;
+            printf("\neitaaaaaaa\n");
         }
     }
     // troca a coluna e_chapeu_indice pela coluna min_indice
     // e_chapeu_indice = l
     // min_indice = k
+    cout << "N indices" << endl;
+    for (int dd : Nindices){
+        cout << dd << " ";
+    }
+        cout << endl;
+    cout << "chapeu indices:" << e_chapeu_indice << endl;
     for(int i = 0; i < Nindices.size(); i++){
-        if(Nindices[i] == min_indice + 1){
-            Nindices[i] = e_chapeu_indice + 1;
+        if(Nindices[i] == min_indice){
+            Nindices[i] = e_chapeu_indice;
             for (int dd : Nindices){
                 cout << dd << " ";
             }
@@ -558,9 +558,15 @@ int main()
             cout << "chapeu indices:" << e_chapeu_indice << endl;
         }
     }
+    cout << "B indices" << endl;
+    for (int dd : Bindices){
+        cout << dd << " ";
+    }
+        cout << endl;
+    cout << "min indices:" << min_indice << endl;
     for(int i = 0; i < Bindices.size(); i++){
-        if(Bindices[i] == e_chapeu_indice + 1){
-            Bindices[i] = min_indice + 1;
+        if(Bindices[i] == e_chapeu_indice){
+            Bindices[i] = min_indice;
             for (int dd : Nindices){
                 cout << dd << " ";
             }
@@ -568,20 +574,41 @@ int main()
             cout << "min_ indices:" << min_indice << endl;
         }
     }
+    cout << "\nB indices trocados" << endl;
+    for (int dd : Bindices){
+        cout << dd << " ";
+    }
+        cout << endl;
+    cout << "\nN indices trocados" << endl;
+    for (int dd : Bindices){
+        cout << dd << " ";
+    }
+        cout << endl;
     for(int i = 0; i < A.size(); i++){
         for(int j = 0; j < Nindices.size(); j++){
-            N[i][j] = A[i][Nindices[i] - 1];
+            N[i][j] = A[i][Nindices[j] - 1];
         }
     }
     for(int i = 0; i < A.size(); i++){
         for(int j = 0; j < Bindices.size(); j++){
-            B[i][j] = A[i][Bindices[i] - 1];
+            B[i][j] = A[i][Bindices[j] - 1];
         }
     }
     printf("\nAlguma coisa alguma coisa troca troca B\n");
     printMatrix(B);
     printf("\nAlguma coisa alguma coisa troca troca N\n");
     printMatrix(N);
+
+    vector<vector<double>> optimal(1, vector<double>(1, 0.0));
+    for(int i = 0; i < xtb.size(); i++){
+        for(int j = 0; j < xtb[0].size(); j++)
+            optimal[0][0] += c[i][j] * xtb[i][j];
+    }
+
+    printf("\nSolucao basica: \n");
+    printMatrix(solution);
+    printf("\nOptimal: \n");
+    printMatrix(optimal);
     // Fase 2
 
     // Vai para a fase 2
@@ -592,6 +619,7 @@ int main()
     // {
     //         cout << iten << " ";
     // }
+    /*
 
     cout << "\nPara aqui?" << endl;
     // Passo 1: cálculo da solução básica
@@ -675,6 +703,7 @@ int main()
     // Passo 6 atualização: nova partição básica, troque a l-ésima coluna de B pela k-ésima coluna de N
     // iteração++
     // Solução ótima: S = para todo i = 1, ..., n, cixi
+    */
 
     return 0;
 }
