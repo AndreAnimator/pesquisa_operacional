@@ -464,16 +464,18 @@ int main()
         for(int j = 0; j < xtb[0].size(); j++)
             solution[i][j] = xtb[i][j];
     }
+    cout << "\nSolução basica xtb: " << endl;
+    printMatrix(solution);
     vector<vector<double>> lambda = multiplyMatrices(ctb, BminusOne, ctb.size(), BminusOne[0].size());
     cout << "\n Vetor Multiplicador Simplex: " << endl;
     printMatrix(lambda);
 
-    vector<vector<double>> a = obtainPartition(A, Nindices);
+    vector<vector<double>> a = N;
 
     cout << "\n Os valores de a: " << endl;
     printMatrix(a);
 
-    vector<vector<double>> reduced_costs = c;
+    vector<vector<double>> reduced_costs = ctn;
     for (int i = 0; i < a[0].size(); i++)
     {
         vector<vector<double>> a_aux;
@@ -489,8 +491,9 @@ int main()
         printMatrix(a_aux);
         multiply_aux = multiplyMatrices(lambda, a_aux, lambda.size(), a_aux[0].size());
         cout << "Quero saber o valor de multiply: " << multiply_aux[0][0] << endl;
-        reduced_costs[Nindices[i] - 1][0] = c[Nindices[i] - 1][0] - multiply_aux[0][0];
+        reduced_costs[0][Nindices[i] - 1] = c[0][Nindices[i] - 1] - multiply_aux[0][0];
     }
+    //Custos reduzidos é pra resultar só em -1 -1
     cout << "Custos reduzidos: " << endl;
     printMatrix(reduced_costs);
 
@@ -509,10 +512,10 @@ int main()
     double min = N[0][0];
     int min_indice = 0;
 
-    for (int i = 0; i < N[0].size(); i++)
+    for (int i = 0; i < reduced_costs[0].size(); i++)
     {
-            if (N[0][i] < min){
-                min = N[0][i];
+            if (reduced_costs[0][i] < min){
+                min = reduced_costs[0][i];
                 min_indice = Nindices[i];
             }
     }
@@ -522,8 +525,9 @@ int main()
     {
         hasSolution = true;
     }
-
-    vector<vector<double>> y = multiplyMatrices(BminusOne, a, BminusOne.size(), a[0].size()); // Fase 2
+    // y é pra ser [2, 1]
+    vector<vector<double>> valor_min = {{min}};
+    vector<vector<double>> y = multiplyMatrices(BminusOne, b, BminusOne.size(), b[0].size()); // Fase 2
     printf("y:\n");
     printMatrix(y);
     double e_chapeu = 10000;
@@ -580,7 +584,7 @@ int main()
     }
         cout << endl;
     cout << "\nN indices trocados" << endl;
-    for (int dd : Bindices){
+    for (int dd : Nindices){
         cout << dd << " ";
     }
         cout << endl;
